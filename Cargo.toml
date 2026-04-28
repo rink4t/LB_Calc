@@ -1,6 +1,10 @@
 [package]
 name = "log_calc_cli"
 version = "0.1.0"
+authors = ["りnk4t"]
 edition = "2024"
+license = "MIT"
+readme = "README.md"
 
 [dependencies]
+ratatui = "0.30.0"

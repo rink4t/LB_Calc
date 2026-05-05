@@ -57,7 +57,8 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    //pub fn new(entry: String) -> Lexer{
-        
-    //}
+    pub fn new(entry: String) -> Lexer{
+        let ch_buffer: Vec<char> = entry.chars().collect();
+        Lexer { expression: ch_buffer, pos: 0, diags: Diagnostic::new("Lexer".to_string()) }
+    }
 }

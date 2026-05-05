@@ -45,6 +45,7 @@ impl Diagnostic {
 
 //|-----------------{Lexer and Token( . .)φ}------------------|
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Var(String),
     Ope(String),
@@ -145,4 +146,32 @@ impl Lexer {
         self.pos = 0;
     }
 
+}
+
+//|-----------------{Parser ( . .)φ}------------------|
+
+pub struct Parser{
+    plexer: Lexer, 
+    pub diag: Diagnostic, //I plan build a fn who cares about the errors from the lexer and parser(in the parser)
+    current: Token,
+}
+
+impl Parser {
+    pub fn new(lexer: Lexer) -> Parser{
+        let mut parser = Parser{plexer: lexer, diag: Diagnostic::new("Parser".to_string()), current: Token::Eof};
+        parser.initparser();
+        parser
+    }
+
+    fn initparser(&mut self){
+        self.next_token();
+    }
+
+    fn next_token(&mut self){
+        self.current = self.plexer.lex();
+    }
+
+    //fn parse_to_ast(&mut self, min_op: u8) -> AST{
+
+    //}
 }

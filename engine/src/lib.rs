@@ -1,4 +1,5 @@
 mod parser;
+mod ast;
 
 #[cfg(test)]
 mod tests {
@@ -6,7 +7,7 @@ mod tests {
 
     #[test]
     fn engine_test(){
-        
+
     }
     
 }

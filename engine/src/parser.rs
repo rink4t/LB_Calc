@@ -65,6 +65,66 @@ impl Lexer {
     }
 
     pub fn lex(&mut self) -> Token{
+        let item_ch: char = self.next();
+
+        if item_ch.is_ascii_whitespace(){
+            self.diags.add_err_msg("whitespaces aren't allowed", Token::Bad(item_ch.to_string()));
+            return Token::Bad(item_ch.to_string());
+        }
+
+        if item_ch.is_ascii_digit(){
+            self.diags.add_err_msg("Numbers aren't allowed as a variable", Token::Bad(item_ch.to_string()));
+            return Token::Bad(item_ch.to_string());
+        }
+
+        match item_ch {
+            'a'..='z' | 'A'..='Z' => {
+                let mut variable: String = item_ch.to_string();
+                loop {
+                    let tmp_ch = self.peek();
+                    match tmp_ch {
+                        'a'..='z' | 'A'..='Z' => {
+                            self.next();
+                            variable.push(tmp_ch);
+                        }
+                        _ => {break;}
+                    }
+                }
+                return Token::Var(variable);
+            }
+            '&' => Token::Ope("∧".to_string()),
+            '|' => Token::Ope("∨".to_string()),
+            '!' => Token::Ope("¬".to_string()),
+            '<' =>{ match self.next() {
+                        '-' => {
+                            let tmp = self.next();
+                            if tmp == '>'{
+                                return Token::Ope("↔".to_string());
+                            }else {
+                                self.diags.add_err_msg("Bad token expected '>' no: ", Token::Bad(tmp.to_string()));
+                                return Token::Bad(tmp.to_string());
+                            }
+                        },
+                        err => {
+                            self.diags.add_err_msg("Bad token expected '-' no: ", Token::Bad(err.to_string()));
+                            return Token::Bad(self.peek().to_string());
+                        },
+                    }
+                },
+                '-' => {
+                    match self.next() {
+                        '>' => return Token::Ope(String::from("→")),
+                        err => {
+                            self.diags.add_err_msg("Bad token expected '>' no: ", Token::Ope(err.to_string()));
+                            return Token::Bad(err.to_string());
+                        }
+                    }
+                },
+                '=' => Token::Ope(String::from("≡")),
+                '(' | ')' => Token::Ope(item_ch.to_string()),
+                '\0' => Token::Eof,
+            bad => {self.diags.add_err_msg("Invalid opertor, simbol or variable:", Token::Bad(bad.to_string())); return Token::Bad(bad.to_string());},    
+        };
         Token::Eof
     }
 

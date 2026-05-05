@@ -30,6 +30,7 @@ impl Diagnostic {
             Token::Ope(data) => format!(": {msg} {data}"),
             Token::Bad(data) => format!(": {msg} {data}"),
             Token::Eof => format!(": Premature EOF"),
+            _ => format!(": Only for debug > this is only for tokens whit a not defined kind"),
         }.as_str());
         
         self.msgs.push(token_info);
@@ -52,6 +53,8 @@ pub enum Token {
     Var(String),
     Ope(String),
     Bad(String),
+    OpenPar,
+    ClosePar,
     Eof,
 }
 
@@ -124,7 +127,8 @@ impl Lexer {
                     }
                 },
                 '=' => Token::Ope(String::from("≡")),
-                '(' | ')' => Token::Ope(item_ch.to_string()),
+                '(' => Token::OpenPar,
+                ')' => Token::ClosePar,
                 '\0' => Token::Eof,
             bad => {self.diags.add_err_msg("Invalid operator, simbol or variable:", Token::Bad(bad.to_string())); return Token::Bad(bad.to_string());},    
         };
@@ -174,6 +178,73 @@ impl Parser {
     }
 
     fn parse_to_ast(&mut self, min_op: u8) -> AST{
-        AST { left: None, right: None, token: Token::Eof }
+
+        let mut node: AST = match self.current.clone() {
+            Token::Var(var) => {
+                self.next_token();
+                AST { left: None, right: None, token: Token::Var(var) }
+            },
+            Token::OpenPar => {
+                self.next_token();
+                let node: AST = self.parse_to_ast(0);
+                match self.current {
+                    Token::ClosePar => {self.next_token(); node}
+                    _ => {
+                        self.diag.add_err_msg("Error missing", Token::Ope(")".to_string()));
+                        node
+                    }
+                }
+            },
+            Token::Ope(op) if self.prefix_operators(op.as_str()) == ((), 9) => {
+                self.next_token();
+                AST { left: None, right: Some(Box::new(self.parse_to_ast(9))), token: Token::Ope(op) }
+            },
+            bad => {
+                self.next_token(); self.diag.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); 
+                AST { left: None, right: None, token: bad }
+            },
+        };
+
+        loop {
+            let op: String = match self.current.clone() {
+                Token::Eof => break,
+                Token::Ope(op) if op.as_str() == "≡" => {
+                    break;
+                }
+                Token::Ope(op) => op,
+                Token::Var(bad) => {self.next_token(); self.diag.add_err_msg("Invalid token operator expected! ", Token::Var(bad)); break;},
+                bad => {self.next_token(); self.diag.add_err_msg("Invalid token expected a infix operator", bad); break;},
+            };
+            
+            if let Some((lop, rop)) = self.infix_operators(op.as_str()){
+                if lop < min_op{ break; }
+                
+                self.next_token();
+                
+                let rhs = self.parse_to_ast(rop);
+                node = AST { left: Some(Box::new(node)), right: Some(Box::new(rhs)), token: Token::Ope(op.to_string())};
+                continue;
+            }
+            break;
+        }
+        return node;
     }
+
+    fn infix_operators(&self, op: &str) -> Option<(u8, u8)>{
+        match op {
+            "↔" => Some((1, 2)),
+            "→" => Some((3, 4)),
+            "∨" => Some((5, 6)),
+            "∧" => Some((7, 8)),
+            _ => None,
+        }
+    }
+
+    fn prefix_operators(&self, op: &str) -> ((), u8){
+        match op {
+            "¬" => ((), 9),
+            _ => ((), 0),
+        }
+    }
+
 }

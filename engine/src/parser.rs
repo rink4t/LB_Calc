@@ -123,7 +123,7 @@ impl Lexer {
                 '=' => Token::Ope(String::from("≡")),
                 '(' | ')' => Token::Ope(item_ch.to_string()),
                 '\0' => Token::Eof,
-            bad => {self.diags.add_err_msg("Invalid opertor, simbol or variable:", Token::Bad(bad.to_string())); return Token::Bad(bad.to_string());},    
+            bad => {self.diags.add_err_msg("Invalid operator, simbol or variable:", Token::Bad(bad.to_string())); return Token::Bad(bad.to_string());},    
         };
         Token::Eof
     }

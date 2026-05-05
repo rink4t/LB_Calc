@@ -8,3 +8,4 @@ readme = "README.md"
 
 [dependencies]
 ratatui = "0.30.0"
+engine = {path = "engine"}

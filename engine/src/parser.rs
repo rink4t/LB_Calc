@@ -6,12 +6,12 @@
 
 //|-----------------{Diagnostics ( . .)φ}------------------|
 
-pub struct Diagnostic{
+pub struct Diagnostic {
     msgs: Vec<String>,
     owner: String,
 }
 
-impl Diagnostic{
+impl Diagnostic {
     pub fn new(owner_str: String) -> Diagnostic{
         Diagnostic{msgs: Vec::new(), owner: owner_str}
     }
@@ -41,4 +41,23 @@ impl Diagnostic{
         self.msgs.clone()
     }
 
+} //I plan to change Diagnostic to its own rs only for simplicity( . .)φ
+
+pub enum Token {
+    Var(String),
+    Ope(String),
+    Bad(String),
+    Eof,
+}
+
+pub struct Lexer {
+    expression: Vec<char>,
+    pos: usize,
+    pub diags: Diagnostic,
+}
+
+impl Lexer {
+    //pub fn new(entry: String) -> Lexer{
+        
+    //}
 }

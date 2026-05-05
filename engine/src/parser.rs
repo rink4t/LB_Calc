@@ -6,6 +6,8 @@
 
 //|-----------------{Diagnostics ( . .)φ}------------------|
 
+use crate::ast::AST;
+
 pub struct Diagnostic {
     msgs: Vec<String>,
     owner: String,
@@ -171,7 +173,7 @@ impl Parser {
         self.current = self.plexer.lex();
     }
 
-    //fn parse_to_ast(&mut self, min_op: u8) -> AST{
-
-    //}
+    fn parse_to_ast(&mut self, min_op: u8) -> AST{
+        AST { left: None, right: None, token: Token::Eof }
+    }
 }

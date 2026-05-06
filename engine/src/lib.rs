@@ -7,6 +7,8 @@ mod ast;
 mod truth_table;
 mod properties;
 
+//|-----------------{ExprRes( . .)φ}------------------|
+
 #[derive(Default)]
 pub struct ExprRes{
     main_vars: Vec<ResTables>,
@@ -18,6 +20,8 @@ pub struct ExprRes{
 impl ExprRes {
     
 }
+
+//|-----------------{Engine ( . .)φ}------------------|
 
 pub struct Engine{
     diags: Diagnostic,

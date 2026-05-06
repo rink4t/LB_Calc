@@ -3,6 +3,10 @@ use crate::parser::Token;
 
 //|-----------------{AST ( . .)φ}------------------|
 
+pub enum ExpressionAST {
+    Expression(String, AST)
+}
+
 pub struct AST{
     pub left: Option<Box<AST>>,
     pub right: Option<Box<AST>>,

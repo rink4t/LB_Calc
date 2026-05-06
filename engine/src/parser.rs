@@ -193,7 +193,7 @@ impl Parser {
                 match self.current.clone() {
                     Token::ClosePar => {self.next_token(); node}
                     _ => {
-                        self.diags.add_err_msg("Error missing:", Token::Ope(")".to_string()));
+                        self.diags.add_err_msg("Error missing:", Token::ClosePar);
                         node
                     }
                 }
@@ -202,11 +202,7 @@ impl Parser {
                 self.next_token();
                 AST { left: None, right: Some(Box::new(self.parse_to_ast(9))), token: Token::Ope(op) }
             },
-            Token::Bad(bad) => {
-                self.next_token(); 
-                self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", Token::Bad(bad.clone()));
-                AST { left: None, right: None, token: Token::Bad(bad) }
-            },
+
             bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); AST { left: None, right: None, token: bad}},
         };
 
@@ -252,7 +248,6 @@ impl Parser {
     }
 
     pub fn build_asts(&mut self) -> (Vec<ExpressionAST>, bool){
-
         let mut expr_asts: Vec<ExpressionAST> = Vec::new();
         let mut equiv_expr = false;
 
@@ -267,8 +262,57 @@ impl Parser {
             }
             equiv_expr = true;
         }
-
         (expr_asts, equiv_expr)
+    }
+
+        pub fn generate_var_buffer(&mut self) -> Vec<String>{
+        self.plexer.reset();
+        self.next_token();
+
+        let mut vars_buff: Vec<String> = Vec::new();
+
+        loop {
+            match self.current.clone() {
+                Token::Var(v) => {
+                    if !vars_buff.contains(&v) {vars_buff.push(v);}
+                }
+                Token::Eof => {break;},
+                _ => {},
+            }
+            self.next_token();
+        }
+
+        return vars_buff;
+    }
+
+    pub fn get_expressions(&mut self) -> Vec<String>{
+        self.plexer.reset();
+        self.next_token();
+
+        let mut expressions: Vec<String> = Vec::new();
+
+        loop {
+            let mut tmp_expr = String::new();
+
+            if self.current == Token::Eof {
+                break;
+            }else {
+                loop {
+                    match self.current.clone() {
+                        Token::Var(data) => {tmp_expr.push_str(&data);},
+                        Token::Ope(data) if data == "≡".to_string() => {break;},
+                        Token::Ope(data) => {tmp_expr.push_str(&data);},
+                        Token::Eof => {break;}
+                        _ => {},
+                    }
+                    self.next_token();
+                }
+                expressions.push(tmp_expr);
+            }
+            self.next_token();
+        }
+        
+        expressions
     }
 
 }

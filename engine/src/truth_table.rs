@@ -2,6 +2,7 @@ use std::{collections::HashMap};
 
 use crate::ast::ExpressionAST;
 
+//|-----------------{Res Tables ( . .)φ}------------------|
 pub enum ResTables {
     Table(String, Vec<bool>)
 }
@@ -11,6 +12,8 @@ impl Default for ResTables {
         ResTables::Table(String::new(), Vec::new())
     }
 }
+
+//|-----------------{Truth Table ( . .)φ}------------------|
 
 pub struct TruthTable{
     pub rows: usize,
@@ -101,7 +104,7 @@ impl TruthTable {
                 ExpressionAST::Expression(id, ast ) => {
                     let mut tmp_vect: Vec<bool> = Vec::new();
                     for x in 0..self.rows {
-                        //tmp_vect.push(ast.evaluate(vars, x));
+                        tmp_vect.push(ast.evaluate(vars, x));
                     }
                     exprmap.insert(id, tmp_vect);
                 }
@@ -122,7 +125,7 @@ impl TruthTable {
     }
     
 
-    /// # using_exprname
+    /// # using_exprname 
     /// This function is only use to pass the expression name in place of the default var name assigned during the parsing
     /// to the expressions the defaults are 'A' and 'B' 
     /// The resultant table is similar to:

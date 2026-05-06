@@ -11,11 +11,10 @@ use super::*;
     fn engine_test(){
 
         let mut parser = Parser::new(Lexer::new("(a&b&)".to_string()));
+        let (asts, is) = parser.build_asts();
 
         if parser.plexer.diags.is_empty() {
             if parser.diags.is_empty() {
-                let (asts, is) = parser.build_asts();
-
                 for x in asts {
                     match x {
                         ExpressionAST::Expression(id, tree) => {

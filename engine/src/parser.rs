@@ -184,11 +184,11 @@ impl Parser {
                 self.next_token();
                 AST { left: None, right: None, token: Token::Var(var) }
             },
-            Token::Ope(op) if op.as_str() == "(" => {
+            Token::OpenPar => {
                 self.next_token();
                 let node: AST = self.parse_to_ast(0);
                 match self.current.clone() {
-                    Token::Ope(op) if op.as_str() == ")"=> {self.next_token(); node}
+                    Token::ClosePar => {self.next_token(); node}
                     _ => {
                         self.diags.add_err_msg("Error missing: )", Token::ClosePar);
                         node

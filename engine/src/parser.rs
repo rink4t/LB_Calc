@@ -30,7 +30,7 @@ impl Diagnostic {
             Token::Ope(data) => format!(": {msg} {data}"),
             Token::Bad(data) => format!(": {msg} {data}"),
             Token::Eof => format!(": Premature EOF"),
-            _ => format!(": Only for debug > this is only for tokens whit a not defined kind"),
+            _ => format!(": Only for debug > this is only for tokens with a not defined kind"),
         }.as_str());
         
         self.msgs.push(token_info);
@@ -118,22 +118,21 @@ impl Lexer {
                         },
                     }
                 },
-                '-' => {
-                    match self.next() {
-                        '>' => return Token::Ope(String::from("→")),
-                        err => {
-                            self.diags.add_err_msg("Bad token expected '>' no: ", Token::Ope(err.to_string()));
-                            return Token::Bad(err.to_string());
-                        }
+            '-' => {
+                match self.next() {
+                    '>' => return Token::Ope(String::from("→")),
+                    err => {
+                        self.diags.add_err_msg("Bad token expected '>' no: ", Token::Ope(err.to_string()));
+                        return Token::Bad(err.to_string());
                     }
-                },
-                '=' => Token::Equivl,
-                '(' => Token::OpenPar,
-                ')' => Token::ClosePar,
-                '\0' => Token::Eof,
+                }
+            },
+            '=' => Token::Equivl,
+            '(' => Token::OpenPar,
+            ')' => Token::ClosePar,
+            '\0' => Token::Eof,
             bad => {self.diags.add_err_msg("Invalid operator, simbol or variable:", Token::Bad(bad.to_string())); return Token::Bad(bad.to_string());},    
-        };
-        Token::Eof
+        }
     }
 
     pub fn next(&mut self) -> char{
@@ -143,8 +142,8 @@ impl Lexer {
     }
 
     pub fn peek(&mut self) -> char{
-        match self.expression.get(self.pos) {
-            Some(ch) => *ch,
+        match self.expression.get(self.pos).cloned() {
+            Some(ch) => ch,
             None => '\0',
         }
     }
@@ -158,14 +157,14 @@ impl Lexer {
 //|-----------------{Parser ( . .)φ}------------------|
 
 pub struct Parser{
-    plexer: Lexer, 
-    pub diag: Diagnostic, //I plan build a fn who cares about the errors from the lexer and parser(in the parser)
+    pub plexer: Lexer, 
+    pub diags: Diagnostic, //I plan build a fn who cares about the errors from the lexer and parser(in the parser)
     current: Token,
 }
 
 impl Parser {
     pub fn new(lexer: Lexer) -> Parser{
-        let mut parser = Parser{plexer: lexer, diag: Diagnostic::new("Parser".to_string()), current: Token::Eof};
+        let mut parser = Parser{plexer: lexer, diags: Diagnostic::new("Parser".to_string()), current: Token::Eof};
         parser.initparser();
         parser
     }
@@ -185,23 +184,24 @@ impl Parser {
                 self.next_token();
                 AST { left: None, right: None, token: Token::Var(var) }
             },
-            Token::OpenPar => {
+            Token::Ope(op) if op.as_str() == "(" => {
                 self.next_token();
                 let node: AST = self.parse_to_ast(0);
-                match self.current {
-                    Token::ClosePar => {self.next_token(); node}
+                match self.current.clone() {
+                    Token::Ope(op) if op.as_str() == ")"=> {self.next_token(); node}
                     _ => {
-                        self.diag.add_err_msg("Error missing", Token::Ope(")".to_string()));
+                        self.diags.add_err_msg("Error missing: )", Token::ClosePar);
                         node
                     }
                 }
-            },
+            }
             Token::Ope(op) if self.prefix_operators(op.as_str()) == ((), 9) => {
                 self.next_token();
                 AST { left: None, right: Some(Box::new(self.parse_to_ast(9))), token: Token::Ope(op) }
             },
             bad => {
-                self.next_token(); self.diag.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); 
+                println!("{:?}", bad);
+                self.next_token(); self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); 
                 AST { left: None, right: None, token: bad }
             },
         };
@@ -212,13 +212,13 @@ impl Parser {
                 Token::Equivl => break,
                 Token::ClosePar => break,
                 Token::Ope(op) => op,
-                Token::Var(bad) => {self.next_token(); self.diag.add_err_msg("Invalid token operator expected! ", Token::Var(bad)); break;},
-                bad => {self.next_token(); self.diag.add_err_msg("Invalid token expected a infix operator", bad); break;},
+                Token::Var(bad) => {self.next_token(); self.diags.add_err_msg("Invalid token operator expected! ", Token::Var(bad)); break;},
+                bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a infix operator", bad); break;},
             };
             
             if let Some((lop, rop)) = self.infix_operators(op.as_str()){
                 if lop < min_op{ break; }
-                
+
                 self.next_token();
                 
                 let rhs = self.parse_to_ast(rop);
@@ -259,7 +259,7 @@ impl Parser {
 
             expr_asts.push(ExpressionAST::Expression("B".to_string(), self.parse_to_ast(0)));
             if self.current == Token::Equivl{
-                self.diag.add_err_msg("Error multiple equivalence operators!", Token::Equivl);
+                self.diags.add_err_msg("Error multiple equivalence operators!", Token::Equivl);
             }
             equiv_expr = true;
         }

@@ -17,10 +17,6 @@ pub struct ExprRes{
     properties: Properties,
 }
 
-impl ExprRes {
-    
-}
-
 //|-----------------{Engine ( . .)φ}------------------|
 
 pub struct Engine{
@@ -136,7 +132,7 @@ mod tests {
         println!("{}", res.err_msg);
 
         println!("Working...");
-        for x in res.res_vars {
+        for x in res.main_vars {
             match x {
                 ResTables::Table(id, data) => {
                     println!("{id}");
@@ -146,5 +142,6 @@ mod tests {
                 }
             }
         }
+        println!("{}", res.properties.contingent);
     }
 }

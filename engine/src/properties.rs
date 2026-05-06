@@ -3,11 +3,11 @@
 
 //|-----------------{Properties ( . .)φ}------------------|
 pub struct Properties{
-    tautology: bool,
-    contradiction: bool,
-    satisfactory: bool,
-    contingent: bool,
-    equivalent: bool
+    pub tautology: bool,
+    pub contradiction: bool,
+    pub satisfactory: bool,
+    pub contingent: bool,
+    pub equivalent: bool
 }
 
 impl Properties {

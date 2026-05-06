@@ -6,7 +6,7 @@
 
 //|-----------------{Diagnostics ( . .)φ}------------------|
 
-use crate::ast::AST;
+use crate::ast::{AST, ExpressionAST};
 
 pub struct Diagnostic {
     msgs: Vec<String>,
@@ -55,6 +55,7 @@ pub enum Token {
     Bad(String),
     OpenPar,
     ClosePar,
+    Equivl,
     Eof,
 }
 
@@ -126,7 +127,7 @@ impl Lexer {
                         }
                     }
                 },
-                '=' => Token::Ope(String::from("≡")),
+                '=' => Token::Equivl,
                 '(' => Token::OpenPar,
                 ')' => Token::ClosePar,
                 '\0' => Token::Eof,
@@ -208,9 +209,8 @@ impl Parser {
         loop {
             let op: String = match self.current.clone() {
                 Token::Eof => break,
-                Token::Ope(op) if op.as_str() == "≡" => {
-                    break;
-                }
+                Token::Equivl => break,
+                Token::ClosePar => break,
                 Token::Ope(op) => op,
                 Token::Var(bad) => {self.next_token(); self.diag.add_err_msg("Invalid token operator expected! ", Token::Var(bad)); break;},
                 bad => {self.next_token(); self.diag.add_err_msg("Invalid token expected a infix operator", bad); break;},
@@ -245,6 +245,26 @@ impl Parser {
             "¬" => ((), 9),
             _ => ((), 0),
         }
+    }
+
+    pub fn build_asts(&mut self) -> (Vec<ExpressionAST>, bool){
+
+        let mut expr_asts: Vec<ExpressionAST> = Vec::new();
+        let mut equiv_expr = false;
+
+        expr_asts.push(ExpressionAST::Expression("A".to_string(), self.parse_to_ast(0)));
+
+        if self.current == Token::Equivl{
+            self.next_token();
+
+            expr_asts.push(ExpressionAST::Expression("B".to_string(), self.parse_to_ast(0)));
+            if self.current == Token::Equivl{
+                self.diag.add_err_msg("Error multiple equivalence operators!", Token::Equivl);
+            }
+            equiv_expr = true;
+        }
+
+        (expr_asts, equiv_expr)
     }
 
 }

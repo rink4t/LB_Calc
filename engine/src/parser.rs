@@ -31,7 +31,6 @@ impl Diagnostic {
             Token::Var(data) => format!(": {msg} {data}"),
             Token::Ope(data) => format!(": {msg} {data}"),
             Token::Bad(data) => format!(": {msg} {data}"),
-            Token::OpenPar | Token::ClosePar => format!("{msg} {:?}", token),
             Token::Equivl => format!("{msg}"),
             Token::Eof => format!(": Premature EOF"),
         }.as_str());
@@ -56,8 +55,6 @@ pub enum Token {
     Var(String),
     Ope(String),
     Bad(String),
-    OpenPar,
-    ClosePar,
     Equivl,
     Eof,
 }
@@ -131,8 +128,7 @@ impl Lexer {
                 }
             },
             '=' => Token::Equivl,
-            '(' => Token::OpenPar,
-            ')' => Token::ClosePar,
+            '(' | ')' => Token::Ope(item_ch.to_string()),
             '\0' => Token::Eof,
             bad => {self.diags.add_err_msg("Invalid operator, simbol or variable:", Token::Bad(bad.to_string())); return Token::Bad(bad.to_string());},    
         }
@@ -187,13 +183,13 @@ impl Parser {
                 self.next_token();
                 AST { left: None, right: None, token: Token::Var(var) }
             },
-            Token::OpenPar => {
+            Token::Ope(op) if op.as_str() == "(" => {
                 self.next_token();
                 let node: AST = self.parse_to_ast(0);
                 match self.current.clone() {
-                    Token::ClosePar => {self.next_token(); node}
+                    Token::Ope(op) if op.as_str() ==")" => {self.next_token(); node}
                     _ => {
-                        self.diags.add_err_msg("Error missing:", Token::ClosePar);
+                        self.diags.add_err_msg("Error missing:", Token::Ope(")".to_string()));
                         node
                     }
                 }
@@ -202,18 +198,18 @@ impl Parser {
                 self.next_token();
                 AST { left: None, right: Some(Box::new(self.parse_to_ast(9))), token: Token::Ope(op) }
             },
-            bad => {
-                println!("{:?}", bad);
-                self.next_token(); self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); 
-                AST { left: None, right: None, token: bad }
+            Token::Bad(bad) => {
+                self.next_token(); 
+                self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", Token::Bad(bad.clone()));
+                AST { left: None, right: None, token: Token::Bad(bad) }
             },
+            bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); AST { left: None, right: None, token: bad}},
         };
 
         loop {
             let op: String = match self.current.clone() {
                 Token::Eof => break,
                 Token::Equivl => break,
-                Token::ClosePar => break,
                 Token::Ope(op) => op,
                 Token::Var(bad) => {self.next_token(); self.diags.add_err_msg("Invalid token operator expected! ", Token::Var(bad)); break;},
                 bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a infix operator", bad); break;},

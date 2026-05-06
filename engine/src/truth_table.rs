@@ -55,7 +55,7 @@ impl TruthTable {
             let mut tmpv: Vec<bool> = Vec::new();
             tmpv.reserve(self.rows as usize);
 
-            if x == 0{ // this case handles the firs colum with the forg pattern
+            if x == 0 { // this case handles the firs colum with the forg pattern
                 vect.push(self.first_colm(rows));
                 continue;
             }
@@ -79,7 +79,6 @@ impl TruthTable {
                 vect.push(tmpv);
                 continue;
             }
-
         }
         vect
     }

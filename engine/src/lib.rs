@@ -1,6 +1,7 @@
 mod parser;
 mod ast;
 mod truth_table;
+mod properties;
 
 #[cfg(test)]
 mod tests {

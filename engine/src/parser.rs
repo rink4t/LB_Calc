@@ -6,6 +6,8 @@
 
 //|-----------------{Diagnostics ( . .)φ}------------------|
 
+use std::fmt::format;
+
 use crate::ast::{AST, ExpressionAST};
 
 pub struct Diagnostic {
@@ -29,8 +31,9 @@ impl Diagnostic {
             Token::Var(data) => format!(": {msg} {data}"),
             Token::Ope(data) => format!(": {msg} {data}"),
             Token::Bad(data) => format!(": {msg} {data}"),
+            Token::OpenPar | Token::ClosePar => format!("{msg} {:?}", token),
+            Token::Equivl => format!("{msg}"),
             Token::Eof => format!(": Premature EOF"),
-            _ => format!(": Only for debug > this is only for tokens with a not defined kind"),
         }.as_str());
         
         self.msgs.push(token_info);
@@ -48,7 +51,7 @@ impl Diagnostic {
 
 //|-----------------{Lexer and Token( . .)φ}------------------|
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Token {
     Var(String),
     Ope(String),
@@ -190,11 +193,11 @@ impl Parser {
                 match self.current.clone() {
                     Token::ClosePar => {self.next_token(); node}
                     _ => {
-                        self.diags.add_err_msg("Error missing: )", Token::ClosePar);
+                        self.diags.add_err_msg("Error missing:", Token::ClosePar);
                         node
                     }
                 }
-            }
+            },
             Token::Ope(op) if self.prefix_operators(op.as_str()) == ((), 9) => {
                 self.next_token();
                 AST { left: None, right: Some(Box::new(self.parse_to_ast(9))), token: Token::Ope(op) }

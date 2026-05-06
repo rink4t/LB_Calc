@@ -10,7 +10,7 @@ use super::*;
     #[test]
     fn engine_test(){
 
-        let mut parser = Parser::new(Lexer::new("(a&b&)".to_string()));
+        let mut parser = Parser::new(Lexer::new("(a&b)".to_string()));
         let (asts, is) = parser.build_asts();
 
         if parser.plexer.diags.is_empty() {

@@ -4,7 +4,7 @@
 // another struct and impl
 
 
-//|-----------------{diagsnostics ( . .)φ}------------------|
+//|-----------------{Diagnostics ( . .)φ}------------------|
 
 use std::fmt::format;
 
@@ -31,7 +31,8 @@ impl Diagnostic {
             Token::Var(data) => format!(": {msg} {data}"),
             Token::Ope(data) => format!(": {msg} {data}"),
             Token::Bad(data) => format!(": {msg} {data}"),
-            Token::Equivl => format!("{msg}"),
+            Token::Equivl => format!("{msg} {:?}", token),
+            Token::OpenPar | Token::ClosePar => format!("{msg} {:?}", token),
             Token::Eof => format!(": Premature EOF"),
         }.as_str());
         
@@ -55,6 +56,8 @@ pub enum Token {
     Var(String),
     Ope(String),
     Bad(String),
+    OpenPar,
+    ClosePar,
     Equivl,
     Eof,
 }
@@ -128,7 +131,8 @@ impl Lexer {
                 }
             },
             '=' => Token::Equivl,
-            '(' | ')' => Token::Ope(item_ch.to_string()),
+            '(' => Token::OpenPar,
+            ')' => Token::ClosePar,
             '\0' => Token::Eof,
             bad => {self.diags.add_err_msg("Invalid operator, simbol or variable:", Token::Bad(bad.to_string())); return Token::Bad(bad.to_string());},    
         }
@@ -162,41 +166,46 @@ pub struct Parser{
 }
 
 impl Parser {
-pub fn new(lexer: Lexer) -> Parser{
-        let mut new_parser = Parser{plexer: lexer, diags: Diagnostic::new("Parser".to_string()), current: Token::Eof};
-        new_parser.initparser();
-        new_parser
+    pub fn new(lexer: Lexer) -> Parser{
+        let mut parser = Parser{plexer: lexer, diags: Diagnostic::new("Parser".to_string()), current: Token::Eof};
+        parser.initparser();
+        parser
     }
 
     fn initparser(&mut self){
         self.next_token();
     }
 
-    fn next_token(&mut self) {
+    fn next_token(&mut self){
         self.current = self.plexer.lex();
     }
 
     fn parse_to_ast(&mut self, min_op: u8) -> AST{
+
         let mut node: AST = match self.current.clone() {
-            Token::Var(at) => {
-                self.next_token(); 
-                AST { left: None, right: None, token: Token::Var(at)}
-            },
-            Token::Ope(opep) if opep.as_str() == "(" => {
+            Token::Var(var) => {
                 self.next_token();
-                let node = self.parse_to_ast(0);
+                AST { left: None, right: None, token: Token::Var(var) }
+            },
+            Token::OpenPar => {
+                self.next_token();
+                let node: AST = self.parse_to_ast(0);
                 match self.current.clone() {
-                    Token::Ope(clsp) if clsp.as_str() == ")" => {self.next_token(); node},
+                    Token::ClosePar => {self.next_token(); node}
                     _ => {
-                        self.diags.add_err_msg("Error missing: ", Token::Ope(")".to_string())); 
+                        self.diags.add_err_msg("Error missing:", Token::Ope(")".to_string()));
                         node
                     }
                 }
-            }
-            Token::Ope(op) if self.is_prefix_operator(op.as_str()) => {
+            },
+            Token::Ope(op) if self.prefix_operators(op.as_str()) == ((), 9) => {
                 self.next_token();
-                let (_, rop) = self.prefix_operators(op.as_str());
-                AST { left: None, right: Some(Box::new(self.parse_to_ast(rop))), token: Token::Ope(op)}
+                AST { left: None, right: Some(Box::new(self.parse_to_ast(9))), token: Token::Ope(op) }
+            },
+            Token::Bad(bad) => {
+                self.next_token(); 
+                self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", Token::Bad(bad.clone()));
+                AST { left: None, right: None, token: Token::Bad(bad) }
             },
             bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); AST { left: None, right: None, token: bad}},
         };
@@ -205,16 +214,15 @@ pub fn new(lexer: Lexer) -> Parser{
             let op: String = match self.current.clone() {
                 Token::Eof => break,
                 Token::Equivl => break,
+                Token::ClosePar => break,
                 Token::Ope(op) => op,
-                Token::Var(t) => {self.next_token(); self.diags.add_err_msg("Invalid token operator expected! ", Token::Var(t)); break;},
-                Token::Bad(t)=> {self.next_token(); self.diags.add_err_msg("Invalid token", Token::Bad(t)); break;},
+                Token::Var(bad) => {self.next_token(); self.diags.add_err_msg("Invalid token operator expected! ", Token::Var(bad)); break;},
+                bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a infix operator", bad); break;},
             };
-
+            
             if let Some((lop, rop)) = self.infix_operators(op.as_str()){
-                if lop < min_op{
-                    break;
-                }
-                
+                if lop < min_op{ break; }
+
                 self.next_token();
                 
                 let rhs = self.parse_to_ast(rop);
@@ -243,78 +251,24 @@ pub fn new(lexer: Lexer) -> Parser{
         }
     }
 
-    fn is_prefix_operator(&self, op: &str) -> bool{
-        matches!(op, "¬")
-    }
+    pub fn build_asts(&mut self) -> (Vec<ExpressionAST>, bool){
 
-    pub fn get_ast(&mut self) -> (Vec<ExpressionAST>, bool){
+        let mut expr_asts: Vec<ExpressionAST> = Vec::new();
+        let mut equiv_expr = false;
 
-        let mut expr: Vec<ExpressionAST> = Vec::new();
-        let mut is_equiv = false;
+        expr_asts.push(ExpressionAST::Expression("A".to_string(), self.parse_to_ast(0)));
 
-        expr.push(ExpressionAST::Expression("A".to_string(), self.parse_to_ast(0)));
-
-        if self.current == Token::Ope("≡".to_string()) {
+        if self.current == Token::Equivl{
             self.next_token();
 
-            expr.push(ExpressionAST::Expression("B".to_string(), self.parse_to_ast(0)));
-
-            if self.current == Token::Ope("≡".to_string()) {
-                self.diags.add_err_msg("Error multiple equivalence operators!", Token::Ope("≡".to_string()));
+            expr_asts.push(ExpressionAST::Expression("B".to_string(), self.parse_to_ast(0)));
+            if self.current == Token::Equivl{
+                self.diags.add_err_msg("Error multiple equivalence operators!", Token::Equivl);
             }
-            is_equiv = true;   
+            equiv_expr = true;
         }
 
-        return (expr, is_equiv);
+        (expr_asts, equiv_expr)
     }
 
-    pub fn generate_var_buffer(&mut self) -> Vec<String>{
-        self.plexer.reset();
-        self.next_token();
-
-        let mut vars_buff: Vec<String> = Vec::new();
-
-        loop {
-            match self.current.clone() {
-                Token::Var(v) => {
-                    if !vars_buff.contains(&v) {vars_buff.push(v);}
-                }
-                Token::Eof => {break;},
-                _ => {},
-            }
-            self.next_token();
-        }
-
-        return vars_buff;
-    }
-
-    pub fn get_expressions(&mut self) -> Vec<String>{
-        self.plexer.reset();
-        self.next_token();
-
-        let mut expressions: Vec<String> = Vec::new();
-
-        loop {
-            let mut tmp_expr = String::new();
-
-            if self.current == Token::Eof {
-                break;
-            }else {
-                loop {
-                    match self.current.clone() {
-                        Token::Var(data) => {tmp_expr.push_str(&data);},
-                        Token::Ope(data) if data == "≡".to_string() => {break;},
-                        Token::Ope(data) => {tmp_expr.push_str(&data);},
-                        Token::Eof => {break;}
-                        _ => {},
-                    }
-                    self.next_token();
-                }
-                expressions.push(tmp_expr);
-            }
-            self.next_token();
-        }
-        
-        expressions
-    }
 }

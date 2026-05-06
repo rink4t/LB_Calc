@@ -300,7 +300,7 @@ impl Parser {
                 loop {
                     match self.current.clone() {
                         Token::Var(data) => {tmp_expr.push_str(&data);},
-                        Token::Ope(data) if data == "≡".to_string() => {break;},
+                        Token::Equivl => {break;},
                         Token::Ope(data) => {tmp_expr.push_str(&data);},
                         Token::Eof => {break;}
                         _ => {},
@@ -311,7 +311,7 @@ impl Parser {
             }
             self.next_token();
         }
-        
+
         expressions
     }
 

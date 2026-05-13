@@ -1,7 +1,6 @@
+//|-----------------{Properties ( . .)φ}------------------|
 
 #[derive(Default)]
-
-//|-----------------{Properties ( . .)φ}------------------|
 pub struct Properties{
     pub tautology: bool,
     pub contradiction: bool,

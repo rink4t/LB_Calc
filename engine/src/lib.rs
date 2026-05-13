@@ -127,12 +127,12 @@ mod tests {
     #[test]
     fn engine_test() {
         let mut engine = Engine::new();
-        let res = engine.solve_expr("(a&b)".to_string());
+        let res = engine.solve_expr("a&!a".to_string());
 
         println!("{}", res.err_msg);
 
         println!("Working...");
-        for x in res.main_vars {
+        for x in res.res_vars {
             match x {
                 ResTables::Table(id, data) => {
                     println!("{id}");
@@ -142,6 +142,5 @@ mod tests {
                 }
             }
         }
-        println!("{}", res.properties.contingent);
     }
 }

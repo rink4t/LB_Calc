@@ -2,6 +2,8 @@ use crossterm::event::KeyCode;
 use ratatui::{Frame, backend::Backend};
 use color_eyre::Result;
 
+use crate::tui::Tui;
+
 pub enum Focus {
     Entry,
     Btn,
@@ -22,11 +24,27 @@ impl App {
         App { running: true, focus: Focus::Entry }
     }
 
-    pub fn draw<B: Backend>(&mut self, frame: &mut Frame) -> Result<()> {
+    pub async fn run(&mut self) -> color_eyre::Result<()> {
+        let mut tui = Tui::new(200)?;
+        
+        tui.init()?;
+
+        while self.running {
+            //self.draw(frame);
+            //self.event();
+        }
+
+        tui.shutdown();
+
         Ok(())
     }
 
-    pub async fn event(&mut self, key: KeyCode) -> color_eyre::Result<()> {
+    fn draw<B: Backend>(&mut self, frame: &mut Frame) -> Result<()> {
         Ok(())
     }
+
+    async fn event(&mut self, key: KeyCode) -> color_eyre::Result<()> {
+        Ok(())
+    }
+
 }

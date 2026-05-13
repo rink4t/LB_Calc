@@ -1,22 +1,19 @@
 use std::io;
 use ratatui::{Terminal, backend::{CrosstermBackend}};
 
+use crate::app::App;
+
 // modules (/ =ω=)/
 mod tui;
 mod app;
+mod event;
 
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
 
-    tui::init();
+    let mut app = App::new();
 
-    let backend = CrosstermBackend::new(io::stdout());
-    let mut terminal = Terminal::new(backend)?;
+    let res = app.run().await;
 
-    //let mut app = App::new(terminal);
-    //let res = app.run().await;
-
-    tui::shutdown();
-
-    Ok(())
+    res
 }

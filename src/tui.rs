@@ -1,13 +1,14 @@
-use std::io::{self, Stdout, stdout};
+use std::{io::{self, Stdout, stdout}, time::Duration};
 
 use color_eyre::eyre::Ok;
 use crossterm::{ExecutableCommand, terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode}};
 use ratatui::backend::{Backend, CrosstermBackend};
 
+use crate::event::{self, EventHndl};
 
 pub struct Tui {
     terminal: ratatui::Terminal<CrosstermBackend<Stdout>>,
-    //event_hndl: 
+    event_hndl: event::EventHndl,
 }
 
 impl Tui {
@@ -15,6 +16,7 @@ impl Tui {
     pub fn new(tick_rate: u64) -> color_eyre::Result<Self>{
         Ok(Self { 
             terminal: ratatui::Terminal::new(CrosstermBackend::new(stdout()))?,
+            event_hndl: EventHndl::new(Duration::from_millis(tick_rate)),
         })
     }
 

@@ -6,8 +6,6 @@
 
 //|-----------------{Diagnostics ( . .)φ}------------------|
 
-use std::fmt::format;
-
 use crate::ast::{AST, ExpressionAST};
 
 pub struct Diagnostic {

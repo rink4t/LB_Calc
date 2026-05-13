@@ -17,7 +17,7 @@ pub struct AST{
 
 impl AST {
     //only for test purposes! (o･ω･o)
-    pub fn print_tree(&self, prefix: &str, is_left: bool, is_root: bool){
+    pub fn _print_tree(&self, prefix: &str, is_left: bool, is_root: bool){
         if is_root{
             println!("──{:?}", self.token);
         }else {
@@ -26,9 +26,9 @@ impl AST {
         
         let new_prefix = format!("{prefix}{}", if is_root {"   "} else {if is_left {"│  "} else {"   "}});
 
-        if let Some(lnode) = &self.left { lnode.print_tree(new_prefix.as_str(), true, false); }
+        if let Some(lnode) = &self.left { lnode._print_tree(new_prefix.as_str(), true, false); }
 
-        if let Some(rnode) = &self.right { rnode.print_tree(new_prefix.as_str(), false, false); }
+        if let Some(rnode) = &self.right { rnode._print_tree(new_prefix.as_str(), false, false); }
     }
 
     fn value_from_variable(&self, var: &String, variables: &HashMap<String, Vec<bool>>, pos: usize) -> bool{

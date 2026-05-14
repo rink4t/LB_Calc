@@ -1,10 +1,9 @@
 use std::{sync::mpsc, thread, time::Duration};
-use crossterm::event::{self, Event, KeyEvent, KeyEventKind};
+use crossterm::event::{self, KeyEvent, KeyEventKind};
 use ratatui::crossterm;
 
 pub enum EventApp {
     Key(KeyEvent),
-    Quit,
     Tick,
 }
 
@@ -39,7 +38,7 @@ impl EventHndl {
         EventHndl { sender: sx, reciver: rx }
     }
 
-    pub fn next(&self) -> color_eyre::Result<EventApp> {
-        Ok(self.reciver.recv()?)
+    pub async fn next(&self) -> Option<EventApp> {
+        self.reciver.recv().ok()
     }
 }

@@ -7,8 +7,8 @@ use ratatui::backend::{Backend, CrosstermBackend};
 use crate::event::{self, EventHndl};
 
 pub struct Tui {
-    terminal: ratatui::Terminal<CrosstermBackend<Stdout>>,
-    event_hndl: event::EventHndl,
+    pub terminal: ratatui::Terminal<CrosstermBackend<Stdout>>,
+    pub event_hndl: event::EventHndl,
 }
 
 impl Tui {

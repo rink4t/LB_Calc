@@ -3,7 +3,7 @@ use ratatui::{Frame, layout::{Constraint, Direction, Layout}, widgets::{self, Bl
 use ratatui::style::Style;
 use color_eyre::Result;
 
-use crate::{components::DrawableComp, event::EventApp, tui::Tui};
+use crate::{components::{Component, DrawableComp}, event::EventApp, tui::Tui};
 
 use crate::components::EntryLine;
 
@@ -108,7 +108,7 @@ impl App {
 
                 if key.code == KeyCode::Tab {
                     match self.comp_focus {
-                        Focus::Entry => {self.comp_focus = Focus::Btn},
+                        Focus::Entry if !self.entry.is_editing() => {self.comp_focus = Focus::Btn},
                         _ => {},
                     }
                 }
@@ -120,10 +120,10 @@ impl App {
         Ok(())
     }
 
-    async fn components_event(&mut self, _key: KeyCode) -> color_eyre::Result<()> {
+    async fn components_event(&mut self, key: KeyCode) -> color_eyre::Result<()> {
 
         match self.comp_focus {
-            Focus::Entry => {},
+            Focus::Entry => {self.entry.event(key);},
             Focus::Btn => {},
             Focus::Info => {self.screen_focus = Screen::Info},
             Focus::Props => {},

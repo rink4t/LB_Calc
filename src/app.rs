@@ -1,11 +1,16 @@
-use crossterm::event::{self, KeyCode, KeyModifiers};
-use ratatui::{Frame, backend::Backend, widgets::{self, Block, Borders, Paragraph}};
+use crossterm::event::{KeyCode, KeyModifiers};
+use ratatui::{Frame, layout::{Constraint, Direction, Layout}, widgets::{self, Block, Borders, Paragraph}};
 use ratatui::style::Style;
 use color_eyre::Result;
 
-use crate::{event::EventApp, tui::Tui};
+use crate::{components::DrawableComp, event::EventApp, tui::Tui};
+
+use crate::components::EntryLine;
+
+//|-----------------{Focus and Screen >ᴗ<}------------------|
 
 #[derive(Default, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum Focus {
     #[default]
     Entry,
@@ -22,16 +27,20 @@ pub enum Screen {
     Info,
 }
 
+//|-----------------{App ( . .)φ}------------------|
 pub struct App {
     running: bool,
     comp_focus: Focus,
     screen_focus: Screen,
+
+    //components:
+    entry: EntryLine,
 }
 
 
 impl App {
     pub fn new() -> App {
-        App { running: true, comp_focus: Focus::default(), screen_focus: Screen::default() }
+        App { running: true, comp_focus: Focus::Entry, screen_focus: Screen::default(), entry: EntryLine::new() }
     }
 
     pub async fn run(&mut self) -> color_eyre::Result<()> {
@@ -54,12 +63,24 @@ impl App {
 
     fn draw(&mut self, frame: &mut Frame) -> Result<()> {
 
-        let text = Paragraph::new(format!("counter: {}", 0))
-        .block(Block::default().borders(Borders::ALL)
-        .title("counter")).style(Style::default().bg(ratatui::style::Color::Blue));
+        let chunks = Layout::default().direction(Direction::Vertical).constraints([
+            Constraint::Length(3),
+            Constraint::Min(3),
+            Constraint::Length(3),
+        ]).split(frame.area());
 
-        frame.render_widget(widgets::Clear, frame.area());
-        frame.render_widget(text, frame.area());
+
+        if self.comp_focus == Focus::Entry {
+            self.entry.draw(frame, chunks[0],true)?;
+        }else {
+            self.entry.draw(frame, chunks[0],false)?;
+        }
+        
+        
+        let block2 = Block::default().borders(Borders::ALL).style(Style::default());
+        frame.render_widget(block2, chunks[1]);
+        let block3 = Block::default().borders(Borders::ALL).style(Style::default());
+        frame.render_widget(block3, chunks[2]);
 
         Ok(())
     }
@@ -85,6 +106,13 @@ impl App {
                     self.running = false;
                 }
 
+                if key.code == KeyCode::Tab {
+                    match self.comp_focus {
+                        Focus::Entry => {self.comp_focus = Focus::Btn},
+                        _ => {},
+                    }
+                }
+
                 self.components_event(key.code).await?;
             },
             EventApp::Tick => {},
@@ -92,7 +120,7 @@ impl App {
         Ok(())
     }
 
-    async fn components_event(&mut self, key: KeyCode) -> color_eyre::Result<()> {
+    async fn components_event(&mut self, _key: KeyCode) -> color_eyre::Result<()> {
 
         match self.comp_focus {
             Focus::Entry => {},
@@ -100,7 +128,6 @@ impl App {
             Focus::Info => {self.screen_focus = Screen::Info},
             Focus::Props => {},
             Focus::Table => {},
-            _ => {},
         }
 
         Ok(())

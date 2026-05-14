@@ -3,15 +3,16 @@ use std::{collections::HashMap};
 use crate::ast::ExpressionAST;
 
 //|-----------------{Res Tables ( . .)φ}------------------|
+#[allow(dead_code)]
 pub enum ResTables {
-    Table(String, Vec<bool>)
+    Table(String, Vec<bool>),
 }
 
-impl Default for ResTables {
+/*impl Default for ResTables {
     fn default() -> Self {
         ResTables::Table(String::new(), Vec::new())
     }
-}
+}*/
 
 //|-----------------{Truth Table ( . .)φ}------------------|
 

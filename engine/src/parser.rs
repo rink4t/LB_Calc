@@ -1,8 +1,3 @@
-// Notes(o･ω･o): I use the following pattern only for order
-// Some struct and impl
-// |------------{Some info ( . .)φ}----------------|
-// another struct and impl
-
 
 //|-----------------{Diagnostics ( . .)φ}------------------|
 

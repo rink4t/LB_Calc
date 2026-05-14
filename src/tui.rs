@@ -2,7 +2,7 @@ use std::{io::{self, Stdout, stdout}, time::Duration};
 
 use color_eyre::eyre::Ok;
 use crossterm::{ExecutableCommand, terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode}};
-use ratatui::backend::{Backend, CrosstermBackend};
+use ratatui::backend::{CrosstermBackend};
 
 use crate::event::{self, EventHndl};
 

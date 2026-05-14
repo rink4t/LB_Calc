@@ -4,7 +4,6 @@ use crate::app::App;
 mod tui;
 mod app;
 mod event;
-mod actions;
 mod components;
 
 #[tokio::main]

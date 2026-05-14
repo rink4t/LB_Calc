@@ -1,0 +1,15 @@
+Notes(o･ω･o): I use the following pattern only for order
+{
+    Some struct and impl
+    |------------{Some info ( . .)φ}----------------|
+    another struct and impl
+
+    only for enums without any impl: In this case i like use animals faces or happy faces
+    //|-----------------{Cats (=^‥^=)}------------------|
+                            or
+    //|-----------------{Cats >ᴗ<}------------------|
+
+    Extra cases like simple comments like: "Todo (￣ ￣|||)" or
+    in some ramdon places check because possible you can find unexpected kaomojis|･д･)ﾉ
+}
+

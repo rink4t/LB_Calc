@@ -5,6 +5,7 @@ use ratatui::crossterm;
 pub enum EventApp {
     Key(KeyEvent),
     Tick,
+    Render,
 }
 
 pub struct EventHndl {
@@ -26,7 +27,7 @@ impl EventHndl {
             if event::poll(tick_rate).unwrap() {
                 let event = event::read().unwrap();
                 match event {
-                    event::Event::Key(key) if key.kind == KeyEventKind::Press => {
+                    event::Event::Key(key) if key.kind == KeyEventKind::Press || key.kind == KeyEventKind::Release => {
                         event_sx.send(EventApp::Key(key)).unwrap();
                     },
                     _ => continue,

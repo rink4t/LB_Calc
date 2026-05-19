@@ -2,15 +2,17 @@ use std::{collections::HashMap};
 
 use crate::ast::ExpressionAST;
 
-//|-----------------{Res Tables ( . .)φ}------------------|
-#[allow(dead_code)]
-pub enum ResTables {
-    Table(String, Vec<bool>),
-}
+//the following code is not necesary anymore (μ_μ){
+    //|-----------------{Res Tables ( . .)φ}------------------|
+    /*#[allow(dead_code)]
+    pub enum ResTables {
+        Table(String, Vec<bool>),
+    }
 
-/*impl Default for ResTables {
-    fn default() -> Self {
-        ResTables::Table(String::new(), Vec::new())
+    impl Default for ResTables {
+        fn default() -> Self {
+            ResTables::Table(String::new(), Vec::new())
+        }
     }
 }*/
 
@@ -29,7 +31,7 @@ impl TruthTable {
     }
 
     pub fn table_init(&mut self, vars_buff: &Vec<String>) -> HashMap<String, Vec<bool>>{
-        let vars: Vec<String> = vars_buff.clone();
+        let vars: Vec<String> = vars_buff.clone(); //( ˘▽˘)っ♨
         let mut true_table: HashMap<String, Vec<bool>> = HashMap::new();
         let mut colums = self.table_gen();
         colums.reverse();
@@ -113,7 +115,9 @@ impl TruthTable {
         exprmap
     }
 
-    pub fn map_table_to_restable(&self, vars_buffer: &Vec<String>, map_table: HashMap<String, Vec<bool>>, exprname: Option<Vec<String>>) -> Vec<ResTables>{
+    //old way to handle vars, expr and their values (* ^ ω ^)
+
+  /*pub fn map_table_to_restable(&self, vars_buffer: &Vec<String>, map_table: HashMap<String, Vec<bool>>, exprname: Option<Vec<String>>) -> Vec<ResTables>{
         let mut restable: Vec<ResTables> = Vec::new();
         
         if let Some(names_buff) = exprname{
@@ -150,6 +154,37 @@ impl TruthTable {
                 restable.push(ResTables::Table(vars.clone(), colum.clone()));
             }
         }
+    } */
+
+    //new way to handle the vars, expr and their values (*≧ω≦*)
+
+    pub fn get_colums(&self, vars_buffer: &Vec<String>, vars_table: HashMap<String, Vec<bool>>, expr_table: HashMap<String, Vec<bool>> ) -> Vec<Vec<bool>> {
+        let mut tmp_bvalsvct: Vec<Vec<bool>> = Vec::new();
+
+        for var in vars_buffer {
+            match vars_table.get(var) {
+                Some(data) => {tmp_bvalsvct.push(data.clone());},
+                None => {},
+            }
+        }
+
+        let exprids = vec!["A", "B"];
+
+        for expr in exprids {
+            match expr_table.get(expr) {
+                Some(data) => {tmp_bvalsvct.push(data.clone());},
+                None => {},
+            }
+        }
+
+        tmp_bvalsvct
+    }
+
+    pub fn get_ids(&self, mut vars_buff: Vec<String>, mut expr_buff: Vec<String> ) -> Vec<String>{
+        let mut tmp_vande: Vec<String> = Vec::new();
+        tmp_vande.append(&mut vars_buff);
+        tmp_vande.append(&mut expr_buff);
+        tmp_vande
     }
 
 }

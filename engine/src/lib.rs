@@ -1,6 +1,6 @@
 use std::{collections::HashMap};
 
-use crate::{ast::ExpressionAST, parser::{Diagnostic, Lexer, Parser}, properties::Properties, truth_table::{ResTables, TruthTable}};
+use crate::{ast::ExpressionAST, parser::{Diagnostic, Lexer, Parser}, properties::Properties, truth_table::{TruthTable}};
 
 mod parser;
 mod ast;
@@ -11,8 +11,8 @@ mod properties;
 
 #[derive(Default)]
 pub struct ExprRes{
-    main_vars: Vec<ResTables>,
-    res_vars: Vec<ResTables>,
+    colums: Vec<Vec<bool>>,
+    ids: Vec<String>,
     err_msg: String,
     properties: Properties,
 }
@@ -99,8 +99,10 @@ impl Engine {
             expr_res.properties.set_properties(table, true);
         }
 
-        expr_res.res_vars = expre_table.map_table_to_restable(&vars_buff, res_expr_table, Some(expressions));//returns the 
-        expr_res.main_vars = expre_table.map_table_to_restable(&vars_buff, variables, None);//returns the operat
+        //expr_res.res_vars = expre_table.map_table_to_restable(&vars_buff, res_expr_table, Some(expressions));//returns the 
+        //expr_res.main_vars = expre_table.map_table_to_restable(&vars_buff, variables, None);//returns the operat
+        expr_res.colums = expre_table.get_colums(&vars_buff, variables, res_expr_table);
+        expr_res.ids = expre_table.get_ids(vars_buff, expressions);
     }
 
     fn simpl_eval(&mut self, asts: Vec<ExpressionAST>, mut expre_table: TruthTable, variables: HashMap<String, Vec<bool>>, expr_res: &mut ExprRes, vars_buff: Vec<String>, expressions: Vec<String>){
@@ -110,15 +112,17 @@ impl Engine {
             expr_res.properties.set_properties(table, false);
         }
 
-        expr_res.res_vars = expre_table.map_table_to_restable(&vars_buff, res_expr_table, Some(expressions)); // the expressions truth result values  
-        expr_res.main_vars = expre_table.map_table_to_restable(&vars_buff, variables, None); //the vars of the main table
+        //expr_res.res_vars = expre_table.map_table_to_restable(&vars_buff, res_expr_table, Some(expressions)); // the expressions truth result values  
+        //expr_res.main_vars = expre_table.map_table_to_restable(&vars_buff, variables, None); //the vars of the main table
+        expr_res.colums = expre_table.get_colums(&vars_buff, variables, res_expr_table);
+        expr_res.ids = expre_table.get_ids(vars_buff, expressions);
     }
 
 }
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, iter::Map};
+    use std::{collections::HashMap, io::{self, Write}, iter::Map};
 
     use crate::{ast::ExpressionAST, parser::{Lexer, Parser, Token}, truth_table::TruthTable};
 
@@ -130,17 +134,5 @@ mod tests {
         let res = engine.solve_expr("a&!a".to_string());
 
         println!("{}", res.err_msg);
-
-        println!("Working...");
-        for x in res.res_vars {
-            match x {
-                ResTables::Table(id, data) => {
-                    println!("{id}");
-                    for y in data {
-                        println!("{y}");
-                    }
-                }
-            }
-        }
     }
 }

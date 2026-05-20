@@ -11,10 +11,10 @@ mod properties;
 
 #[derive(Default)]
 pub struct ExprRes{
-    colums: Vec<Vec<bool>>,
-    ids: Vec<String>,
-    err_msg: String,
-    properties: Properties,
+    pub colums: Vec<Vec<bool>>,
+    pub ids: Vec<String>,
+    pub err_msg: String,
+    pub properties: Properties,
 }
 
 //|-----------------{Engine ( . .)φ}------------------|

@@ -295,8 +295,10 @@ impl Parser {
                         Token::Var(data) => {tmp_expr.push_str(&data);},
                         Token::Equivl => {break;},
                         Token::Ope(data) => {tmp_expr.push_str(&data);},
+                        Token::OpenPar => {tmp_expr.push('(');},
+                        Token::ClosePar => {tmp_expr.push(')');},
+                        Token::Bad(_) => {},
                         Token::Eof => {break;}
-                        _ => {},
                     }
                     self.next_token();
                 }

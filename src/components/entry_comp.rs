@@ -43,6 +43,10 @@ impl EntryLineComp {
         self.text.pop();
     }
 
+    pub fn clear(&mut self) {
+        self.text.clear();
+    }
+
     pub fn get_entry(&self) -> Option<String>{
         if !self.text.is_empty() {
             return Some(self.text.clone());
@@ -73,7 +77,7 @@ impl DrawableComp for EntryLineComp {
 }
 
 impl Component for EntryLineComp {
-    fn event(&mut self, key: crossterm::event::KeyEvent) {
+    fn event(&mut self, key: crossterm::event::KeyEvent) -> color_eyre::Result<()> {
         if key.kind == KeyEventKind::Press {
             match key.code {
                 KeyCode::Char(ch) if self.mode == Editing::Yes => {self.add_ch(ch);}
@@ -87,6 +91,7 @@ impl Component for EntryLineComp {
                 _ => {}
             }
         }
+        Ok(())
     }
 
     fn focus(&mut self, focus: bool) {

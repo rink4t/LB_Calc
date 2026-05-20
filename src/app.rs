@@ -1,9 +1,11 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
-use ratatui::{Frame, layout::{Constraint, Direction, Layout}, widgets::{self, Block, Borders, Paragraph}};
+use engine::Engine;
+use ratatui::{Frame, layout::{Constraint, Direction, Layout}, widgets::{Block, Borders}};
 use ratatui::style::Style;
 use color_eyre::Result;
+use std::{sync::mpsc};
 
-use crate::{components::{Component, DrawableComp}, event::EventApp, tui::Tui};
+use crate::{components::{Component, DrawableComp, StatefullDrawableComp, TableComp, btn_comp::BtnFlag}, event::EventApp, tui::{Tui}};
 
 use crate::components::EntryLineComp;
 use crate::components::ButtonComp;
@@ -15,7 +17,7 @@ use crate::components::ButtonComp;
 pub enum Focus {
     #[default]
     Entry,
-    Btn,
+    Exe,
     Info,
     Table,
     Props,
@@ -36,13 +38,27 @@ pub struct App {
 
     //components:
     entry: EntryLineComp,
-    btn_resolv: ButtonComp,
+    exe_resolv: ButtonComp,
+    table: TableComp,
+
+    //actions e and r
+    sender: mpsc::Sender<BtnFlag>,
+    reciver: mpsc::Receiver<BtnFlag>,
+
+    //engine: 
+    engine: Engine,
 }
 
 
 impl App {
     pub fn new() -> App {
-        App { running: true, comp_focus: Focus::Entry, screen_focus: Screen::default(), entry: EntryLineComp::new(true), btn_resolv: ButtonComp::new("Resolve", false) }
+
+        let engine = Engine::new();
+
+        let (sx, rx) = mpsc::channel();
+        let btn_sender = sx.clone();
+        
+        App { running: true, comp_focus: Focus::Entry, screen_focus: Screen::default(), entry: EntryLineComp::new(true), exe_resolv: ButtonComp::new("Resolve", false, btn_sender, BtnFlag::Update), table: TableComp::default(), sender: sx, reciver: rx, engine: engine }
     }
 
     pub async fn run(&mut self) -> color_eyre::Result<()> {
@@ -56,6 +72,7 @@ impl App {
             })?;
             
             self.event(&mut tui).await?;
+            self.action().await?;
         }
 
         tui.shutdown();
@@ -78,11 +95,8 @@ impl App {
         ]).split(chunks[0]);
 
         self.entry.draw(frame, top_layout[0]);
-        self.btn_resolv.draw(frame, top_layout[1]);
-
-        
+        self.exe_resolv.draw(frame, top_layout[1]);
         let infb = Block::default().borders(Borders::ALL).style(Style::default());
-
         frame.render_widget(infb, top_layout[2]);
 
         let middle_layout = Layout::default().direction(Direction::Horizontal).constraints([
@@ -90,10 +104,8 @@ impl App {
             Constraint::Percentage(30),
         ]).split(chunks[1]);
         
-        let cnt_block1 = Block::default().borders(Borders::ALL).style(Style::default());
+        self.table.draw(frame, middle_layout[0]);
         let cnt_block2 = Block::default().borders(Borders::ALL).style(Style::default());
-
-        frame.render_widget(cnt_block1, middle_layout[0]);
         frame.render_widget(cnt_block2, middle_layout[1]);
         
         let block3 = Block::default().borders(Borders::ALL).style(Style::default());
@@ -116,6 +128,25 @@ impl App {
         Ok(())
     }
 
+    async fn action(&mut self) -> color_eyre::Result<()> {
+        if let Ok(action) = self.reciver.try_recv() {
+            match action {
+                BtnFlag::Update => {
+                    //engine executes here and then (・v・) Odin (・v・) knows!
+                    if let Some(expr) = self.entry.get_entry(){
+                        let result = self.engine.solve_expr(expr);
+                        self.table.update(result.ids, result.colums);
+                    }
+                    //self.engine.solve_expr(self.entry.get_entry())
+
+                },
+                _ => {},
+            }   
+        }
+        
+        Ok(())
+    }
+
     async fn scr_main(&mut self, event: EventApp) -> color_eyre::Result<()> {
         match event {
             EventApp::Key(key) => {
@@ -127,11 +158,11 @@ impl App {
                     match self.comp_focus {
                         Focus::Entry if !self.entry.is_editing() => {
                             self.entry.focus(false); 
-                            self.comp_focus = Focus::Btn;
-                            self.btn_resolv.focus(true);
+                            self.comp_focus = Focus::Exe;
+                            self.exe_resolv.focus(true);
                         },
-                        Focus::Btn => {
-                            self.btn_resolv.focus(false);
+                        Focus::Exe => {
+                            self.exe_resolv.focus(false);
                             self.comp_focus = Focus::Info
                         },
                         Focus::Info => {self.comp_focus = Focus::Table},
@@ -152,8 +183,8 @@ impl App {
     async fn components_event(&mut self, key: KeyEvent) -> color_eyre::Result<()> {
 
         match self.comp_focus {
-            Focus::Entry => {self.entry.event(key);},
-            Focus::Btn => {self.btn_resolv.event(key);},
+            Focus::Entry => {self.entry.event(key)?;},
+            Focus::Exe => {self.exe_resolv.event(key)?;},
             Focus::Info => {},
             Focus::Props => {},
             Focus::Table => {},

@@ -2,12 +2,15 @@ use std::{sync::mpsc, thread, time::Duration};
 use crossterm::event::{self, KeyEvent, KeyEventKind};
 use ratatui::crossterm;
 
+//|-----------------{Events of the app and console( . .)φ}------------------|
 pub enum EventApp {
     Key(KeyEvent),
     Tick,
     Render,
 }
 
+
+//|-----------------{Event handler ( . .)φ}------------------|
 pub struct EventHndl {
     sender: mpsc::Sender<EventApp>,
     reciver: mpsc::Receiver<EventApp>,

@@ -31,7 +31,7 @@ impl EntryLineComp {
     //Prototype this functions need a little amount of code to be good enought "(--_--)"
     //at this moment only can handle entrys like 'a', 'b', '&', 'c' = ab&c
     //ab&c can be two things "ab" as a var or the user forgot the operant in that case is necessary delete the entry
-    //from c to b and then reinsert everything like: 'a', '&', 'b', '&', 'c' = ab&c
+    //from c to b and then reinsert everything like: 'a', '&', 'b', '&', 'c' = a&b&c
     //Thats no good enought, if you forget a operant in that example only needs delete 3 elements 
     //in other cases possible you need delete a big amount of the entry for only one errorヽ(°〇°)ﾉ. 
 

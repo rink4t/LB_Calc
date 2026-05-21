@@ -6,11 +6,13 @@ use crossterm::event::{KeyEvent};
 pub mod entry_comp;
 pub mod btn_comp;
 pub mod table_comp;
+pub mod props_comp;
 
 //components use (≧◡≦)
 pub use entry_comp::EntryLineComp;
-pub use btn_comp::ButtonComp;
+pub use btn_comp::{ButtonComp, BtnFlag};
 pub use table_comp::TableComp;
+pub use props_comp::PropsComp;
 
 pub trait DrawableComp {
     fn draw(&self, f: &mut Frame, rect: Rect);

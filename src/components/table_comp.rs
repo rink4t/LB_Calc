@@ -1,4 +1,4 @@
-use ratatui::{layout::{Alignment, Constraint}, style::Style, symbols::block, widgets::{Block, Borders, Cell, Padding, Paragraph, Row, Table, TableState}};
+use ratatui::{layout::{Alignment, Constraint}, style::Style, text::Line, widgets::{Block, Borders, Cell, Padding, Paragraph, Row, Table, TableState}};
 
 use crate::components::{StatefullDrawableComp};
 
@@ -12,7 +12,7 @@ pub struct TableComp {
 
 impl TableComp {
     pub fn new(ids: Vec<String>, colums: Vec<Vec<bool>>) -> TableComp {
-        TableComp { table_state: TableState::new().with_selected_cell(Some((0,1))), ids, colums }
+        TableComp { table_state: TableState::default(), ids, colums }
     }
 
     pub fn update(&mut self, ids: Vec<String>, colums: Vec<Vec<bool>>) {
@@ -29,18 +29,16 @@ impl Default for TableComp {
 
 impl StatefullDrawableComp for TableComp {
     fn draw(&mut self, f: &mut ratatui::prelude::Frame, rect: ratatui::prelude::Rect) {
-
         //Now cats guide us (=^-ω-^=)
         if !self.ids.is_empty() && !self.colums.is_empty() {
-            let header = Row::new(self.ids.clone());    
+            let header = Row::new(self.ids.iter().map(|item| Cell::from(Line::from(item.clone()).alignment(Alignment::Center))));    
             let rows_n = self.colums[0].len();
 
-            //println!("{} : {}", self.colums[0].len(), rows_n);
-
-            let rows: Vec<Row> = (0..rows_n).map(|row_indx|{let cells: Vec<String> = self.colums.iter()
-                .map(|col| col[row_indx].to_string()).collect(); Row::new(cells)}).collect();
+            let rows: Vec<Row> = (0..rows_n).map(|row_indx|{let cells: Vec<Line> = self.colums.iter()
+                .map(|col| if col[row_indx] {Line::from("T").alignment(Alignment::Center)} else {Line::from("F").alignment(Alignment::Center)})
+                .collect(); Row::new(cells)}).collect();
             
-            let widths: Vec<Constraint> = self.ids.iter().map(|cell| Constraint::Percentage(100/1 as u16))
+            let widths: Vec<Constraint> = self.ids.iter().map(|cell| Constraint::Percentage(100/20 as u16))
                 .collect();
 
             let table = Table::new(rows, widths).block(Block::new().borders(Borders::ALL)).header(header)

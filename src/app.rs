@@ -1,18 +1,20 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use engine::Engine;
-use ratatui::{Frame, layout::{Constraint, Direction, Layout}, widgets::{Block, Borders}};
+use ratatui::{Frame, layout::{Alignment, Constraint, Direction, Layout, Rect}, text::Line, widgets::{Block, Borders, Clear}};
 use ratatui::style::Style;
 use color_eyre::Result;
 use std::{sync::mpsc};
 
-use crate::{components::{Component, DrawableComp, StatefullDrawableComp, TableComp, btn_comp::BtnFlag}, event::EventApp, tui::{Tui}};
+use crate::{components::{Component, DrawableComp, StatefullDrawableComp}, event::EventApp, tui::{Tui}};
 
 use crate::components::EntryLineComp;
-use crate::components::ButtonComp;
+use crate::components::{ButtonComp, BtnFlag};
+use crate::components::TableComp;
+use crate::components::PropsComp;
 
 //|-----------------{Focus and Screen >ᴗ<}------------------|
 
-#[derive(Default, Debug, PartialEq, Eq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum Focus {
     #[default]
@@ -21,6 +23,7 @@ pub enum Focus {
     Info,
     Table,
     Props,
+    CloseInf,
 }
 
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -40,6 +43,14 @@ pub struct App {
     entry: EntryLineComp,
     exe_resolv: ButtonComp,
     table: TableComp,
+    props: PropsComp,
+    inf_btn: ButtonComp,
+
+    //components inf_screen: 
+    close: ButtonComp,
+
+    //main focus comp:
+    main_fcs: Focus,
 
     //actions e and r
     sender: mpsc::Sender<BtnFlag>,
@@ -56,9 +67,8 @@ impl App {
         let engine = Engine::new();
 
         let (sx, rx) = mpsc::channel();
-        let btn_sender = sx.clone();
         
-        App { running: true, comp_focus: Focus::Entry, screen_focus: Screen::default(), entry: EntryLineComp::new(true), exe_resolv: ButtonComp::new("Resolve", false, btn_sender, BtnFlag::Update), table: TableComp::default(), sender: sx, reciver: rx, engine: engine }
+        App { running: true, comp_focus: Focus::Entry, screen_focus: Screen::default(), entry: EntryLineComp::new(true), exe_resolv: ButtonComp::new("Resolve", false, sx.clone(), BtnFlag::Update), table: TableComp::default(), props: PropsComp::default(), inf_btn: ButtonComp::new("Info", false, sx.clone(), BtnFlag::ChangeWindow), main_fcs: Focus::Entry, close: ButtonComp::new("Close", true, sx.clone(), BtnFlag::ChangeWindow), sender: sx, reciver: rx, engine: engine }
     }
 
     pub async fn run(&mut self) -> color_eyre::Result<()> {
@@ -96,8 +106,7 @@ impl App {
 
         self.entry.draw(frame, top_layout[0]);
         self.exe_resolv.draw(frame, top_layout[1]);
-        let infb = Block::default().borders(Borders::ALL).style(Style::default());
-        frame.render_widget(infb, top_layout[2]);
+        self.inf_btn.draw(frame, top_layout[2]);
 
         let middle_layout = Layout::default().direction(Direction::Horizontal).constraints([
             Constraint::Percentage(70),
@@ -105,11 +114,23 @@ impl App {
         ]).split(chunks[1]);
         
         self.table.draw(frame, middle_layout[0]);
-        let cnt_block2 = Block::default().borders(Borders::ALL).style(Style::default());
-        frame.render_widget(cnt_block2, middle_layout[1]);
+        self.props.draw(frame, middle_layout[1]);
         
         let block3 = Block::default().borders(Borders::ALL).style(Style::default());
         frame.render_widget(block3, chunks[2]);
+
+        if self.screen_focus == Screen::Info {
+            let popup_block = Block::default().title(Line::from("Information").alignment(Alignment::Center)).borders(Borders::ALL).style(Style::default().bg(ratatui::style::Color::Rgb(31, 31, 1)));
+            let area = centered_rect(50, 75, frame.area());
+
+            frame.render_widget(Clear, area);
+            frame.render_widget(popup_block, area);
+
+            let popup_chunks = Layout::default().direction(Direction::Vertical).constraints(vec![
+                Constraint::Percentage(75),
+            ]).split(area);
+        
+        }
 
         Ok(())
     }
@@ -120,10 +141,12 @@ impl App {
             return Ok(());
         };
 
-        match self.screen_focus {
-            Screen::Main => {self.scr_main(event).await?},
-            Screen::Info => {},
-        }
+        //match self.screen_focus {
+            //Screen::Main => {self.scr_main(event).await?},
+            //Screen::Info => {},
+        //}
+
+        self.scr_main(event).await?;
 
         Ok(())
     }
@@ -136,10 +159,22 @@ impl App {
                     if let Some(expr) = self.entry.get_entry(){
                         let result = self.engine.solve_expr(expr);
                         self.table.update(result.ids, result.colums);
+                        self.props.update(result.properties);              
                     }
-                    //self.engine.solve_expr(self.entry.get_entry())
-
                 },
+                BtnFlag::ChangeWindow => {
+                    match self.screen_focus {
+                        Screen::Main => {
+                            self.main_fcs = self.comp_focus;
+                            self.screen_focus = Screen::Info;
+                            self.comp_focus = Focus::CloseInf;
+                        },
+                        Screen::Info => {
+                            self.comp_focus = self.main_fcs;
+                            self.screen_focus = Screen::Main;
+                        },
+                    }
+                }
                 _ => {},
             }   
         }
@@ -150,29 +185,37 @@ impl App {
     async fn scr_main(&mut self, event: EventApp) -> color_eyre::Result<()> {
         match event {
             EventApp::Key(key) => {
-                if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL && key.kind == KeyEventKind::Press {
-                    self.running = false;
-                }
-
-                if key.code == KeyCode::Tab && key.kind == KeyEventKind::Press{
-                    match self.comp_focus {
-                        Focus::Entry if !self.entry.is_editing() => {
-                            self.entry.focus(false); 
-                            self.comp_focus = Focus::Exe;
-                            self.exe_resolv.focus(true);
-                        },
-                        Focus::Exe => {
-                            self.exe_resolv.focus(false);
-                            self.comp_focus = Focus::Info
-                        },
-                        Focus::Info => {self.comp_focus = Focus::Table},
-                        Focus::Table => {self.comp_focus = Focus::Props}
-                        Focus::Props => {self.comp_focus = Focus::Entry; self.entry.focus(true);},
-                        _ => {},
+                if self.screen_focus == Screen::Main {
+                    if key.code == KeyCode::Char('c') && key.modifiers == KeyModifiers::CONTROL && key.kind == KeyEventKind::Press {
+                        self.running = false;
+                    }   
+                    if key.code == KeyCode::Tab && key.kind == KeyEventKind::Press{
+                        match self.comp_focus {
+                            Focus::Entry if !self.entry.is_editing() => {
+                                self.entry.focus(false); 
+                                self.comp_focus = Focus::Exe;
+                                self.exe_resolv.focus(true);
+                            },
+                            Focus::Exe => {
+                                self.exe_resolv.focus(false);
+                                self.comp_focus = Focus::Info;
+                                self.inf_btn.focus(true);
+                            },
+                            Focus::Info => {
+                                self.inf_btn.focus(false);
+                                self.comp_focus = Focus::Table;
+                                //self.table.
+                            },
+                            Focus::Table => {self.comp_focus = Focus::Props}
+                            Focus::Props => {self.comp_focus = Focus::Entry; self.entry.focus(true);},
+                            _ => {},
+                        }
                     }
-                }
 
-                self.components_event(key).await?;
+                    self.main_components_event(key).await?; 
+                }else if self.screen_focus == Screen::Info {
+                    self.info_main_components_event(key).await?;
+                }
             },
             EventApp::Render => {}
             EventApp::Tick => {},
@@ -180,17 +223,39 @@ impl App {
         Ok(())
     }
 
-    async fn components_event(&mut self, key: KeyEvent) -> color_eyre::Result<()> {
-
+    async fn main_components_event(&mut self, key: KeyEvent) -> color_eyre::Result<()> {
         match self.comp_focus {
             Focus::Entry => {self.entry.event(key)?;},
             Focus::Exe => {self.exe_resolv.event(key)?;},
-            Focus::Info => {},
+            Focus::Info => {self.inf_btn.event(key)?;},
             Focus::Props => {},
             Focus::Table => {},
+            _ => {},
         }
-
         Ok(())
     }
+
+    async fn info_main_components_event(&mut self, key: KeyEvent) -> color_eyre::Result<()> {
+        match self.comp_focus {
+            Focus::CloseInf => {self.close.event(key)?;}
+            _ => {},
+        }
+        Ok(())
+    }
+
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, rect: Rect) -> Rect{
+    let popup_layout = Layout::default().direction(Direction::Vertical).constraints([
+        Constraint::Percentage((100 - percent_y) / 2),
+        Constraint::Percentage(percent_y),
+        Constraint::Percentage((100 - percent_y) / 2),
+    ]).split(rect);
+
+    Layout::default().direction(Direction::Horizontal).constraints([
+        Constraint::Percentage((100 - percent_x) / 2),
+        Constraint::Percentage(percent_x),
+        Constraint::Percentage((100 - percent_x) / 2),
+    ]).split(popup_layout[1])[1]
 
 }

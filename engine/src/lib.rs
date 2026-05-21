@@ -5,7 +5,7 @@ use crate::{ast::ExpressionAST, parser::{Diagnostic, Lexer, Parser}, properties:
 mod parser;
 mod ast;
 mod truth_table;
-mod properties;
+pub mod properties;
 
 //|-----------------{ExprRes( . .)φ}------------------|
 
@@ -46,8 +46,8 @@ impl Engine {
         if let Some(entry) = self.entry_hndl(entry) {
             self.evaluate(entry, &mut expr_res);
         }else {
-            for errs in self.diags.get_msgs() {
-                println!("{errs}");
+            if let Some(msg) = self.diags.get_msgs().first() {
+                expr_res.err_msg = msg.clone();   
             }
         }
         expr_res
@@ -96,7 +96,7 @@ impl Engine {
         let res_table = equivtable.generate_table_from_ast(ast, &res_expr_table);
 
         if let Some(table) = res_table.get("A") {
-            expr_res.properties.set_properties(table, true);
+            expr_res.properties.set_properties(table);
         }
 
         //expr_res.res_vars = expre_table.map_table_to_restable(&vars_buff, res_expr_table, Some(expressions));//returns the 
@@ -109,7 +109,7 @@ impl Engine {
         let res_expr_table = expre_table.generate_table_from_ast(asts, &variables); 
 
         if let Some(table) = res_expr_table.get("A"){
-            expr_res.properties.set_properties(table, false);
+            expr_res.properties.set_properties(table);
         }
 
         //expr_res.res_vars = expre_table.map_table_to_restable(&vars_buff, res_expr_table, Some(expressions)); // the expressions truth result values  

@@ -7,7 +7,7 @@ mod ast;
 mod truth_table;
 pub mod properties;
 
-//|-----------------{ExprRes( . .)φ}------------------|
+//|-----------------{ExprRes >ᴗ<}------------------|
 
 #[derive(Default)]
 pub struct ExprRes{
@@ -96,11 +96,11 @@ impl Engine {
         let res_table = equivtable.generate_table_from_ast(ast, &res_expr_table);
 
         if let Some(table) = res_table.get("A") {
-            expr_res.properties.set_properties(table);
+            let expr_a = if let Some(expr) = res_expr_table.get("A") {expr} else {unreachable!()};
+            let expr_b = if let Some(expr) = res_expr_table.get("B") {expr} else {unreachable!()};
+            expr_res.properties.set_properties_equivexpr(table, expr_a, expr_b);
         }
 
-        //expr_res.res_vars = expre_table.map_table_to_restable(&vars_buff, res_expr_table, Some(expressions));//returns the 
-        //expr_res.main_vars = expre_table.map_table_to_restable(&vars_buff, variables, None);//returns the operat
         expr_res.colums = expre_table.get_colums(&vars_buff, variables, res_expr_table);
         expr_res.ids = expre_table.get_ids(vars_buff, expressions);
     }

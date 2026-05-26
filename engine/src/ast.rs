@@ -39,7 +39,7 @@ impl AST {
                     None => false,
                 }
             },
-            None => false,
+            None => unreachable!(),
         }
     }
 

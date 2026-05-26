@@ -3,13 +3,14 @@ use ratatui::{Frame, layout::Rect, style::{Color, Stylize}, text::{Line, Span, T
 
 use crate::components::{Component, DrawableComp};
 
-//|-----------------{Res Tables ( . .)φ}------------------|
+//|-----------------{Res Tables >ᴗ<}------------------|
 
 #[derive(PartialEq, Eq)]
 pub enum Editing {
     Yes,
     No,
 }
+
 
 //|-----------------{EntryLineComp( . .)φ}------------------|
 
@@ -21,7 +22,7 @@ pub struct EntryLineComp {
 
 impl EntryLineComp {
     pub fn new(init_focus: bool) -> Self {
-        Self { text: String::from("a&b"), mode: Editing::No, focus: init_focus }
+        Self { text: String::from("a&b"), mode: Editing::No, focus: init_focus}
     }
 
     pub fn is_editing(&self) -> bool {
@@ -55,6 +56,9 @@ impl EntryLineComp {
         }
     }
 
+    pub fn get_keybinds(&self) -> String{
+        "Enter: Edit/Stop Editing | Backspace: remove char | You can't use Tab while editing (o･ω･o)|".to_string()
+    }
 }
 
 impl DrawableComp for EntryLineComp {

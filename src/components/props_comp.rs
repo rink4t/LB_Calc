@@ -1,14 +1,15 @@
+use crossterm::style::Stylize;
 use engine::properties::{Properties};
-use ratatui::{Frame, layout::{Alignment, Rect}, text::Text, widgets::{Block, Borders, Padding, Paragraph}};
+use ratatui::{Frame, layout::{Alignment, Rect}, style::{Color, Style}, text::{Line, Span, Text}, widgets::{Block, Borders, Padding, Paragraph}};
 
 use crate::components::DrawableComp;
 
-//|-----------------{Flags ( . .)φ}------------------|
+//|-----------------{Flags >ᴗ<}------------------|
 
 #[derive(PartialEq, Eq)]
 enum Flag {
-    PrntProps,
-    NPrntProps,
+    ShowProps,
+    ShowMsg,
 }
 
 //|-----------------{Properties Component ( . .)φ}------------------|
@@ -20,31 +21,45 @@ pub struct PropsComp{
 impl PropsComp {
     pub fn update(&mut self, props: Properties) {
         self.props = props;
-        self.flag = Flag::PrntProps;
+        self.flag = Flag::ShowProps;
+    }
+
+    pub fn no_props(&mut self) {
+        self.flag = Flag::ShowMsg;
     }
 }
 
 impl Default for PropsComp {
     fn default() -> Self {
-        Self { props: engine::properties::Properties::default(), flag: Flag::NPrntProps }
+        Self { props: engine::properties::Properties::default(), flag: Flag::ShowProps }
     }
 }
 
 impl DrawableComp for PropsComp {
     fn draw(&self, f: &mut Frame, rect: Rect) {
-        if self.flag == Flag::PrntProps {
+        if self.flag == Flag::ShowProps {
             let props = Paragraph::new(Text::from(    
                 vec![
-                    format!("Tautology: {}", self.props.tautology).into(),
-                    format!("Contradiction: {}", self.props.contradiction).into(),
-                    format!("Satisfactory: {}", self.props.satisfactory).into(),
-                    format!("Contingent: {}", self.props.contingent).into(),
-                    format!("Equivalent: {}", self.props.equivalent).into(),
+                    Line::from(" "),
+                    Line::from(vec![Span::raw("Tautology: "), Span::styled(self.props.tautology.to_string(), Style::default()
+                    .fg( if self.props.tautology {Color::Green}else{Color::Red}))]),
+                    Line::from(" "),
+                    Line::from(vec![Span::raw("Contradiction: "), Span::styled(self.props.contradiction.to_string(), Style::default()
+                    .fg( if self.props.contradiction {Color::Green}else{Color::Red}))]),
+                    Line::from(" "),
+                    Line::from(vec![Span::raw("Satisfactory: "), Span::styled(self.props.satisfactory.to_string(), Style::default()
+                    .fg( if self.props.satisfactory {Color::Green}else{Color::Red}))]),
+                    Line::from(" "),
+                    Line::from(vec![Span::raw("contingent: "), Span::styled(self.props.contingent.to_string(), Style::default()
+                    .fg( if self.props.contingent {Color::Green}else{Color::Red}))]),
+                    Line::from(" "),
+                    Line::from(vec![Span::raw("Equivalent: "), Span::styled(self.props.equivalent.to_string(), Style::default()
+                    .fg( if self.props.equivalent {Color::Green}else{Color::Red}))]),
                 ]
             )).block(Block::new().borders(Borders::ALL));
             
             f.render_widget(props, rect);
-        }else {
+        }else if self.flag == Flag::ShowMsg {
             let text = "__φ(。。) Props?";
             let text_lines = text.lines().count() as u16;
             let block_height = rect.height.saturating_sub(2);

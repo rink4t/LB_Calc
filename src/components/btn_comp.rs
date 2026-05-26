@@ -7,6 +7,7 @@ use crate::components::{Component, DrawableComp};
 
 use engine::ExprRes;
 
+//|-----------------{Btn flags >ᴗ<}------------------|
 pub enum BtnFlag {
     Update,
     Clean, 
@@ -32,7 +33,7 @@ pub struct ButtonComp {
 
 impl ButtonComp {
     pub fn new(text: &str, init_focus: bool, snd: mpsc::Sender<BtnFlag>, flag: BtnFlag) -> ButtonComp {
-        ButtonComp { text: text.to_string(), state: State::Release, focus: false, sender: snd, flag: flag }
+        ButtonComp { text: text.to_string(), state: State::Release, focus: false, sender: snd, flag: flag}
     }
 
     pub fn execute(&self) -> color_eyre::Result<()>{
@@ -44,6 +45,10 @@ impl ButtonComp {
         }
 
         Ok(())
+    }
+
+    pub fn get_keybinds(&self) -> String{
+        "Enter: Execute".to_string()
     }
 
 }

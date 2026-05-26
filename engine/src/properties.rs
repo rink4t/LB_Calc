@@ -15,25 +15,44 @@ impl Properties {
     }
 
     pub fn set_properties(&mut self, truth_vec: &Vec<bool>){
-        match truth_vec.first() {
-            Some(truval) => {
-                if self.is_all_same(truth_vec){
-                    if *truval{
+
+        if self.is_all_same(truth_vec){
+            match truth_vec.first() {
+                Some(value) => {
+                    if *value {
                         self.tautology = true;
-                        self.satisfactory = true;
-                        self.equivalent = true;
-                    }else { 
-                        self.contradiction = true; 
-                        self.equivalent = false;
+                    }else {
+                        self.contradiction = true;
                     }
-                }
-            },
-            None => {}
+                },
+                None => {unreachable!()}
+            }
         }
 
         if !self.contradiction{ self.satisfactory =  true; }
 
         if !self.tautology && !self.contradiction { self.contingent = true; }
 
+    }
+
+    pub fn set_properties_equivexpr(&mut self, Eqtruth_vec: &Vec<bool>, expr_a: &Vec<bool>, expr_b: &Vec<bool>) {
+        if self.is_all_same(expr_a) && self.is_all_same(expr_b) {
+            let val_a = if let Some(val) = expr_a.first() { *val } else {unreachable!()};
+            let val_b = if let Some(val) = expr_b.first() { *val } else {unreachable!()};
+
+            if (val_a == true) && (val_b == true) {
+                self.tautology = true;
+            }else if (val_a == false) && (val_b == false) {
+                self.contradiction = true;
+            }
+        }
+
+        if self.is_all_same(Eqtruth_vec) {
+            self.equivalent = true;
+        }else { self.equivalent = false }
+
+        if !self.contradiction { self.satisfactory = true; }
+
+        if !self.tautology && !self.contradiction { self.contingent = true; }
     }
 }

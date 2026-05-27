@@ -129,10 +129,17 @@ mod tests {
     use super::*;
 
     #[test]
+    ///Performance test with 19 Vars
     fn engine_test() {
         let mut engine = Engine::new();
-        let res = engine.solve_expr("a&!a".to_string());
+        let res = engine.solve_expr("a&b&c&d&e&f&g&h&i&j&k&m&n&o&p&q&r&s&t".to_string());
+        if res.err_msg.is_empty() {
+            let rows = usize::pow(2, 19);
+            let items = rows * res.colums[0].len();
+            println!("Ready rows: {}, items: {}", rows, items);
+        }else {
+            println!("Error");
+        }
 
-        println!("{}", res.err_msg);
     }
 }

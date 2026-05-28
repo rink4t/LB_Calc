@@ -15,7 +15,7 @@ pub use table_comp::TableComp;
 pub use props_comp::PropsComp;
 
 pub trait DrawableComp {
-    fn draw(&self, f: &mut Frame, rect: Rect);
+    fn draw(&mut self, f: &mut Frame, rect: Rect);
 }
 
 pub trait StatefullDrawableComp {

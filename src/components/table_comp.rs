@@ -37,7 +37,6 @@ impl TableComp {
         self.ids.clear();
         self.colums.clear();
         self.flag = Flag::ShowMsg;
-        //self.table_state.
     }
 
     pub fn get_keybinds(&self) -> String{
@@ -68,8 +67,14 @@ impl StatefullDrawableComp for TableComp {
                 .map(|col| if col[row_indx] {Line::from("T").fg(Color::Green).alignment(Alignment::Center)} else {Line::from("F").fg(Color::Red).alignment(Alignment::Center)})
                 .collect(); Row::new(cells)}).collect();
             
-            let widths: Vec<Constraint> = self.ids.iter().map(|cell| Constraint::Percentage(100/cell.chars().count() as u16))
-                .collect();
+            let widths: Vec<Constraint> = self.ids.iter().map(|cell| 
+                if cell.chars().count() >= 2 {
+                    Constraint::Min(cell.chars().count() as u16)
+                }else {
+                    Constraint::Min(3)
+                }
+                
+            ).collect();
 
             let table = Table::new(rows, widths).block(Block::new().borders(Borders::ALL)).header(header)
                 .cell_highlight_style(Style::new().bg(Color::Rgb(59, 8, 3))).row_highlight_style(Style::new().bg(Color::Rgb(36, 10, 7))).highlight_symbol(">>");

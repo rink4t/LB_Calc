@@ -1,4 +1,3 @@
-use crossterm::style::Stylize;
 use engine::properties::{Properties};
 use ratatui::{Frame, layout::{Alignment, Rect}, style::{Color, Style}, text::{Line, Span, Text}, widgets::{Block, Borders, Padding, Paragraph}};
 
@@ -36,7 +35,7 @@ impl Default for PropsComp {
 }
 
 impl DrawableComp for PropsComp {
-    fn draw(&self, f: &mut Frame, rect: Rect) {
+    fn draw(&mut self, f: &mut Frame, rect: Rect) {
         if self.flag == Flag::ShowProps {
             let props = Paragraph::new(Text::from(    
                 vec![

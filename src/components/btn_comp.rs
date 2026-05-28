@@ -10,7 +10,6 @@ use engine::ExprRes;
 //|-----------------{Btn flags >ᴗ<}------------------|
 pub enum BtnFlag {
     Update,
-    Clean, 
     ChangeWindow,
 }
 
@@ -41,7 +40,6 @@ impl ButtonComp {
         match self.flag {
             BtnFlag::Update => {self.sender.send(BtnFlag::Update)?},
             BtnFlag::ChangeWindow => {self.sender.send(BtnFlag::ChangeWindow)?},
-            BtnFlag::Clean => {self.sender.send(BtnFlag::Clean)?},
         }
 
         Ok(())
@@ -54,7 +52,7 @@ impl ButtonComp {
 }
 
 impl DrawableComp for ButtonComp {
-    fn draw(&self, f: &mut ratatui::prelude::Frame, rect: ratatui::prelude::Rect) {
+    fn draw(&mut self, f: &mut ratatui::prelude::Frame, rect: ratatui::prelude::Rect) {
         let text =  if self.state == State::Pressed {
             Span::from(self.text.clone()).bg(Color::Yellow)
         } else {

@@ -1,3 +1,5 @@
+use std::thread::current;
+
 use crossterm::{cursor, event::{KeyCode, KeyEventKind}};
 use ratatui::{Frame, layout::Rect, style::{Color, Stylize}, text::{self, Line, Span, ToSpan}, widgets::{Block, Paragraph}};
 
@@ -24,7 +26,7 @@ pub struct EntryLineComp {
 
 impl EntryLineComp {
     pub fn new(init_focus: bool) -> Self {
-        Self { text: String::from(""), mode: Editing::No, focus: init_focus, offset: 8, cursor: 0, width: 0}
+        Self { text: String::from(""), mode: Editing::No, focus: init_focus, offset: 0, cursor: 0, width: 0}
     }
 
     pub fn is_editing(&self) -> bool {
@@ -51,12 +53,14 @@ impl EntryLineComp {
         if !self.text.is_empty() && current_index >= 1 {
             self.text.remove(current_index.saturating_sub(1));
         }
-        
+
         self.move_cursor_left();
     }
 
     fn move_cursor_left(&mut self) {
-        self.cursor = self.cursor.saturating_sub(1);
+        if self.cursor > 0 {
+            self.cursor = self.cursor.saturating_sub(1);
+        }
     }
 
     fn move_cursor_right(&mut self) {
@@ -65,27 +69,29 @@ impl EntryLineComp {
         }
     }
 
-    fn update_offset(&mut self) {
-        if self.cursor < self.offset {
-            self.offset = self.cursor;
-        }
+    fn update_scroll(&mut self) {
+        
+        let total_chars = self.text.chars().count();
 
-        if self.cursor >= self.offset + self.visible_with() as u16 {
-            self.offset = (self.cursor.saturating_sub(self.visible_with() as u16)).saturating_add(1);
+        let cursor_ch_pos = self.text.chars().take(self.cursor as usize).count();
+        let max_scroll = total_chars.saturating_sub(self.visible_with().saturating_sub(2));
+
+        if (cursor_ch_pos as u16) < self.offset {
+            self.offset = cursor_ch_pos as u16;
+        } else if (cursor_ch_pos as u16) >= self.offset + self.visible_with().saturating_sub(2) as u16 {
+            self.offset = (cursor_ch_pos as u16).saturating_sub((self.visible_with().saturating_sub(2)) as u16).saturating_add(1);
         }
         
-        if self.cursor <= self.offset + self.visible_with() as u16{
-            self.offset = (self.cursor.saturating_sub(self.visible_with() as u16)).saturating_add(1);
-        }
+        self.offset = self.offset.min(max_scroll as u16);
+
     }
 
     fn cursor_x(&self) -> u16 {
-        let visible_offset = (self.cursor.saturating_sub(self.offset)).saturating_add(8);
-        visible_offset as u16
+        return (self.cursor.saturating_sub(self.offset)).saturating_add(8);
     }
 
     fn visible_with(&self) -> usize {
-        (self.width.saturating_sub(9)) as usize
+        (self.width.saturating_sub(8)) as usize
     }
 
     pub fn get_entry(&self) -> Option<String>{
@@ -114,7 +120,7 @@ impl DrawableComp for EntryLineComp {
 
         let visible_txt_width = self.visible_with();
 
-        self.update_offset();
+        self.update_scroll();
 
         if self.focus {
             let util = self.text.chars().skip(self.offset as usize).take(visible_txt_width).collect::<String>();

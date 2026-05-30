@@ -11,4 +11,4 @@ It needs more improments but at this moment is functional. ヘ(￣ω￣ヘ)
 # How use
 At this moment the better way to use LB_Calc is cloning the repo and compiling it in --release
 # Demo
-/resources/Demo.gif
+resources/Demo.gif

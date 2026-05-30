@@ -103,7 +103,11 @@ impl EntryLineComp {
     }
 
     pub fn get_keybinds(&self) -> String{
-        "Enter: Edit/Stop Editing | Backspace: remove char | You can't use Tab while editing (o･ω･o)|".to_string()
+        format!("Enter: Edit/Stop Editing | Backspace: rmv ch | Editing: {} | ↑ ↓ → ← |", if self.is_editing() {
+            "T"
+        } else {
+            "F"
+        })
     }
 
 }

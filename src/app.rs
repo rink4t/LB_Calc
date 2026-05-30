@@ -1,6 +1,6 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use engine::Engine;
-use ratatui::{Frame, layout::{Alignment, Constraint, Direction, Layout, Rect}, text::{Line, Text}, widgets::{Block, Borders, Clear, Paragraph}};
+use ratatui::{Frame, layout::{Constraint, Direction, Layout, Rect}, text::{Line, Text}, widgets::{Block, Borders, Clear, Paragraph, Wrap}};
 use ratatui::style::Style;
 use color_eyre::Result;
 use std::{sync::mpsc};
@@ -155,16 +155,29 @@ impl App {
         frame.render_widget(block3, chunks[3]);
 
         if self.screen_focus == Screen::Info {
-            let popup_block = Block::default().title(Line::from("Information").alignment(Alignment::Center)).borders(Borders::ALL).style(Style::default().bg(ratatui::style::Color::Rgb(31, 31, 1)));
+            //let popup_block = Block::default().title(Line::from("Information").alignment(Alignment::Center)).borders(Borders::ALL).style(Style::default().bg(ratatui::style::Color::Rgb(31, 31, 1)));
             let area = centered_rect(50, 75, frame.area());
 
             frame.render_widget(Clear, area);
-            frame.render_widget(popup_block, area);
 
             let popup_chunks = Layout::default().direction(Direction::Vertical).constraints(vec![
-                Constraint::Percentage(75),
+                Constraint::Percentage(96),
+                Constraint::Min(3),
             ]).split(area);
-        
+
+            let sometext = Paragraph::new(vec![
+                Line::from(vec!["Author: りnkat".into()]),
+                Line::from(vec!["Some app info:".into()]),
+                Line::from(vec!["1: The app still under development".into()]),
+                Line::from(vec!["2: You can see some of the components keybinds in the keybind bar.".into()]),
+                Line::from(vec!["Advice: The vars are not reordered in a alphabetic order".into()]),
+                Line::from(vec![r#"Like "(a&c)->b" you possible expect table: a b c "#.into()]),
+                Line::from(vec!["but you get a c b, it's not error I just like this way".into()]),
+            ]).wrap(Wrap {trim: true}).block(Block::new().borders(Borders::ALL));
+
+            frame.render_widget(sometext, popup_chunks[0]);
+            self.close.draw(frame, popup_chunks[1]);
+
         }
 
         Ok(())
@@ -202,8 +215,7 @@ impl App {
                             self.props.no_props();
                             self.table.no_table();
                             self.err_msg = result.err_msg;
-                        }
-                                     
+                        } 
                     }
                 },
                 BtnFlag::ChangeWindow => {
@@ -212,14 +224,16 @@ impl App {
                             self.main_fcs = self.comp_focus;
                             self.screen_focus = Screen::Info;
                             self.comp_focus = Focus::CloseInf;
+                            self.close.focus(true);
                         },
                         Screen::Info => {
                             self.comp_focus = self.main_fcs;
+                            self.close.focus(false);
                             self.screen_focus = Screen::Main;
+
                         },
                     }
                 }
-                _ => {},
             }   
         }
         

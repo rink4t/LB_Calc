@@ -168,11 +168,11 @@ impl App {
             let sometext = Paragraph::new(vec![
                 Line::from(vec!["Author: りnkat".into()]),
                 Line::from(vec!["Some app info:".into()]),
-                Line::from(vec!["1: The app still under development".into()]),
-                Line::from(vec!["2: You can see some of the components keybinds in the keybind bar.".into()]),
+                Line::from(vec!["1: The app still under development.".into()]),
+                Line::from(vec!["2: Simbols &: ∧, |: ∨, !: ¬, ->: →, <->: ↔".into()]),
                 Line::from(vec!["Advice: The vars are not reordered in a alphabetic order".into()]),
                 Line::from(vec![r#"Like "(a&c)->b" you possible expect table: a b c "#.into()]),
-                Line::from(vec!["but you get a c b, it's not error I just like this way".into()]),
+                Line::from(vec!["but you get a c b, it's not a error I just like this way".into()]),
             ]).wrap(Wrap {trim: true}).block(Block::new().borders(Borders::ALL));
 
             frame.render_widget(sometext, popup_chunks[0]);

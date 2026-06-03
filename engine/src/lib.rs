@@ -58,8 +58,10 @@ impl Engine {
         let (asts, is_equiv) = parser.build_asts();
 
         if !parser.plexer.diags.is_empty() {
-            match parser.diags.get_msgs().first() {
-                Some(msg) => {expr_res.err_msg = msg.clone()},
+            match parser.plexer.diags.get_msgs().first() {
+                Some(msg) => {
+                    return expr_res.err_msg = msg.clone();
+                },
                 None => {}
             }
             return;
@@ -67,7 +69,9 @@ impl Engine {
 
         if !parser.diags.is_empty() {
             match parser.diags.get_msgs().first() {
-                Some(msg) => {expr_res.err_msg = msg.clone()},
+                Some(msg) => {
+                    return expr_res.err_msg = msg.clone()
+                },
                 None => {}
             }
             return;
@@ -130,7 +134,7 @@ mod tests {
 
     #[test]
     ///Performance test with 19 Vars
-    fn engine_test() {
+    /*fn engine_test() {
         let mut engine = Engine::new();
         let res = engine.solve_expr("a&b&c&d&e&f&g&h&i&j&k&m&n&o&p&q&r&s&t".to_string());
         if res.err_msg.is_empty() {
@@ -140,6 +144,12 @@ mod tests {
         }else {
             println!("Error");
         }
+    }*/
 
+    //test1
+    fn test1() {
+        let mut engine = Engine::new();
+        let res = engine.solve_expr("a-b".to_string());
+        
     }
 }

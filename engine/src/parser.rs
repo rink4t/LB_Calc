@@ -1,7 +1,7 @@
 
 //|-----------------{Diagnostics ( . .)φ}------------------|
 
-use crate::ast::{AST, ExpressionAST};
+use crate::{ast::{AST, ExpressionAST}, parser::Token::ClosePar};
 
 pub struct Diagnostic {
     msgs: Vec<String>,
@@ -18,9 +18,9 @@ impl Diagnostic {
         err_msg.push_str(format!(" {msg}").as_str());
     }
 
-    fn add_err_msg(&mut self, msg: &str, token: Token){
-        let mut token_info: String = self.owner.clone();
-        token_info.push_str(match token {
+    fn add_err_msg_dbg(&mut self, msg: &str, token: Token){
+        let mut error_msg: String = self.owner.clone();
+        error_msg.push_str(match token {
             Token::Var(data) => format!(": {msg} {data}"),
             Token::Ope(data) => format!(": {msg} {data}"),
             Token::Bad(data) => format!(": {msg} {data}"),
@@ -29,7 +29,21 @@ impl Diagnostic {
             Token::Eof => format!(": Premature EOF"),
         }.as_str());
         
-        self.msgs.push(token_info);
+        self.msgs.push(error_msg);
+    }
+
+    fn add_err_msg(&mut self, msg: &str, token: Token){
+        let error_msg: String = match token {
+            Token::Var(data) => format!(": {msg} {data}"),
+            Token::Ope(data) => format!(": {msg} {data}"),
+            Token::Bad(data) => format!(": {msg} {data}"),
+            Token::Equivl => format!("{msg} {:?}", token),
+            Token::OpenPar => format!("{msg} ("),
+            Token::ClosePar => format!("{msg} )"),
+            Token::Eof => format!(": Premature EOF"),
+        };
+        
+        self.msgs.push(error_msg);
     }
 
     pub fn is_empty(&self) -> bool{
@@ -173,7 +187,7 @@ impl Parser {
         self.current = self.plexer.lex();
     }
 
-    fn parse_to_ast(&mut self, min_op: u8) -> AST{
+    fn parse_to_ast(&mut self, min_op: u8, parop: bool) -> AST{
 
         let mut node: AST = match self.current.clone() {
             Token::Var(var) => {
@@ -182,7 +196,7 @@ impl Parser {
             },
             Token::OpenPar => {
                 self.next_token();
-                let node: AST = self.parse_to_ast(0);
+                let node: AST = self.parse_to_ast(0, true);
                 match self.current.clone() {
                     Token::ClosePar => {self.next_token(); node}
                     _ => {
@@ -193,7 +207,7 @@ impl Parser {
             },
             Token::Ope(op) if self.prefix_operators(op.as_str()) == ((), 9) => {
                 self.next_token();
-                AST { left: None, right: Some(Box::new(self.parse_to_ast(9))), token: Token::Ope(op) }
+                AST { left: None, right: Some(Box::new(self.parse_to_ast(9, false))), token: Token::Ope(op) }
             },
 
             bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); AST { left: None, right: None, token: bad}},
@@ -203,9 +217,10 @@ impl Parser {
             let op: String = match self.current.clone() {
                 Token::Eof => break,
                 Token::Equivl => break,
-                Token::ClosePar => break,
+                Token::ClosePar if parop => break,
                 Token::Ope(op) => op,
                 Token::Var(bad) => {self.next_token(); self.diags.add_err_msg("Invalid token operator expected! ", Token::Var(bad)); break;},
+                Token::ClosePar => {self.diags.add_err_msg(r#"Expected a "(" but only get: "#, ClosePar); break;},
                 bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a infix operator", bad); break;},
             };
             
@@ -214,7 +229,7 @@ impl Parser {
 
                 self.next_token();
                 
-                let rhs = self.parse_to_ast(rop);
+                let rhs = self.parse_to_ast(rop, parop);
                 node = AST { left: Some(Box::new(node)), right: Some(Box::new(rhs)), token: Token::Ope(op.to_string())};
                 continue;
             }
@@ -244,12 +259,12 @@ impl Parser {
         let mut expr_asts: Vec<ExpressionAST> = Vec::new();
         let mut equiv_expr = false;
 
-        expr_asts.push(ExpressionAST::Expression("A".to_string(), self.parse_to_ast(0)));
+        expr_asts.push(ExpressionAST::Expression("A".to_string(), self.parse_to_ast(0, false)));
 
         if self.current == Token::Equivl{
             self.next_token();
 
-            expr_asts.push(ExpressionAST::Expression("B".to_string(), self.parse_to_ast(0)));
+            expr_asts.push(ExpressionAST::Expression("B".to_string(), self.parse_to_ast(0, false)));
             if self.current == Token::Equivl{
                 self.diags.add_err_msg("Error multiple equivalence operators!", Token::Equivl);
             }

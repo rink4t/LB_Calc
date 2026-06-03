@@ -77,7 +77,9 @@ impl Engine {
             return;
         }
 
-        let vars_buff = parser.generate_var_buffer();
+        let mut vars_buff = parser.generate_var_buffer();
+        vars_buff.sort();
+
         let mut vars_expr_table = TruthTable::new(vars_buff.len());
         let main_vars_table = vars_expr_table.table_init(&vars_buff);
 

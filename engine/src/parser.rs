@@ -35,13 +35,13 @@ impl Diagnostic {
 
     fn add_err_msg(&mut self, msg: &str, token: Token){
         let error_msg: String = match token {
-            Token::Var(data) => format!(": {msg} {data}"),
-            Token::Ope(data) => format!(": {msg} {data}"),
-            Token::Bad(data) => format!(": {msg} {data}"),
+            Token::Var(data) => format!("{msg} {data}"),
+            Token::Ope(data) => format!("{msg} {data}"),
+            Token::Bad(data) => format!("{msg} {data}"),
             Token::Equivl => format!("{msg} {:?}", token),
             Token::OpenPar => format!("{msg} ("),
             Token::ClosePar => format!("{msg} )"),
-            Token::Eof => format!(": Premature EOF"),
+            Token::Eof => format!("Premature EOF"),
         };
         
         self.msgs.push(error_msg);

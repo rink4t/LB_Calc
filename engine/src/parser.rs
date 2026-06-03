@@ -18,7 +18,8 @@ impl Diagnostic {
         err_msg.push_str(format!(" {msg}").as_str());
     }
 
-    fn add_err_msg_dbg(&mut self, msg: &str, token: Token){
+    //only for debugging <(￣︶￣)>
+    fn _add_err_msg_dbg(&mut self, msg: &str, token: Token){
         let mut error_msg: String = self.owner.clone();
         error_msg.push_str(match token {
             Token::Var(data) => format!(": {msg} {data}"),

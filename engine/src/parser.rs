@@ -208,7 +208,7 @@ impl Parser {
             },
             Token::Ope(op) if self.prefix_operators(op.as_str()) == ((), 9) => {
                 self.next_token();
-                AST { left: None, right: Some(Box::new(self.parse_to_ast(9, false))), token: Token::Ope(op) }
+                AST { left: None, right: Some(Box::new(self.parse_to_ast(9, parop))), token: Token::Ope(op) }
             },
 
             bad => {self.next_token(); self.diags.add_err_msg("Invalid token expected a var or valid prefix operant: ", bad.clone()); AST { left: None, right: None, token: bad}},

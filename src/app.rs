@@ -5,7 +5,7 @@ use ratatui::style::Style;
 use color_eyre::Result;
 use std::{sync::mpsc};
 
-use crate::{components::{Component, DrawableComp, StatefullDrawableComp}, event::EventApp, tui::{Tui}};
+use crate::{components::{Component, DrawableComp}, event::EventApp, tui::{Tui}};
 
 use crate::components::EntryLineComp;
 use crate::components::{ButtonComp, BtnFlag};

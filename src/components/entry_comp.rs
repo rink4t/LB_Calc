@@ -1,7 +1,5 @@
-use std::thread::current;
-
-use crossterm::{cursor, event::{KeyCode, KeyEventKind}};
-use ratatui::{Frame, layout::Rect, style::{Color, Stylize}, text::{self, Line, Span, ToSpan}, widgets::{Block, Paragraph}};
+use crossterm::{event::{KeyCode, KeyEventKind}};
+use ratatui::{Frame, layout::Rect, style::{Color, Stylize}, text::{Line, Span, ToSpan}, widgets::{Block, Paragraph}};
 
 use crate::components::{Component, DrawableComp};
 
@@ -35,7 +33,7 @@ impl EntryLineComp {
 
     fn add_ch(&mut self, ch: char) {
 
-        if self.text.chars().count() > u16::MAX.into(){
+        if self.text.chars().count() >= 1024{
             return;
         }
 
@@ -72,7 +70,7 @@ impl EntryLineComp {
     fn update_scroll(&mut self) {
         
         let total_chars = self.text.chars().count();
-
+        
         let cursor_ch_pos = self.text.chars().take(self.cursor as usize).count();
         let max_scroll = total_chars.saturating_sub(self.visible_with().saturating_sub(2));
 

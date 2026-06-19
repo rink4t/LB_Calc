@@ -274,7 +274,7 @@ impl Parser {
         (expr_asts, equiv_expr)
     }
 
-        pub fn generate_var_buffer(&mut self) -> Vec<String>{
+    pub fn generate_var_buffer(&mut self) -> Vec<String>{
         self.plexer.reset();
         self.next_token();
 
@@ -309,12 +309,12 @@ impl Parser {
                 loop {
                     match self.current.clone() {
                         Token::Var(data) => {tmp_expr.push_str(&data);},
-                        Token::Equivl => {break;},
                         Token::Ope(data) => {tmp_expr.push_str(&data);},
                         Token::OpenPar => {tmp_expr.push('(');},
                         Token::ClosePar => {tmp_expr.push(')');},
-                        Token::Bad(_) => {},
-                        Token::Eof => {break;}
+                        Token::Equivl | Token::Eof  => {break;},
+                        _ => {},
+                        
                     }
                     self.next_token();
                 }

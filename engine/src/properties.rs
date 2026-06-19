@@ -35,7 +35,7 @@ impl Properties {
 
     }
 
-    pub fn set_properties_equivexpr(&mut self, Eqtruth_vec: &Vec<bool>, expr_a: &Vec<bool>, expr_b: &Vec<bool>) {
+    pub fn set_properties_equivexpr(&mut self, eqtruth_vec: &Vec<bool>, expr_a: &Vec<bool>, expr_b: &Vec<bool>) {
         if self.is_all_same(expr_a) && self.is_all_same(expr_b) {
             let val_a = if let Some(val) = expr_a.first() { *val } else {unreachable!()};
             let val_b = if let Some(val) = expr_b.first() { *val } else {unreachable!()};
@@ -47,7 +47,7 @@ impl Properties {
             }
         }
 
-        if self.is_all_same(Eqtruth_vec) {
+        if self.is_all_same(eqtruth_vec) {
             self.equivalent = true;
         }else { self.equivalent = false }
 

@@ -6,12 +6,11 @@ use ratatui::crossterm;
 pub enum EventApp {
     Key(KeyEvent),
     Tick,
-    //Render,
 }
 
 //|-----------------{Event handler ( . .)φ}------------------|
 pub struct EventHndl {
-    sender: mpsc::Sender<EventApp>,
+    //sender: mpsc::Sender<EventApp>,
     reciver: mpsc::Receiver<EventApp>,
 }
 
@@ -38,7 +37,8 @@ impl EventHndl {
             event_sx.send(EventApp::Tick).unwrap();
         });
 
-        EventHndl { sender: sx, reciver: rx }
+        //EventHndl { sender: sx, reciver: rx }
+        EventHndl { reciver: rx }
     }
 
     pub async fn next(&self) -> Option<EventApp> {

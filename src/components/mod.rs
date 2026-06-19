@@ -18,7 +18,7 @@ pub trait DrawableComp {
     fn draw(&mut self, f: &mut Frame, rect: Rect);
 }
 
-pub trait StatefullDrawableComp {
+pub trait _StatefullDrawableComp {
     fn draw(&mut self, f: &mut Frame, rect: Rect);
 }
 
